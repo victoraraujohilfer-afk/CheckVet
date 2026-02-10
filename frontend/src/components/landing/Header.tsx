@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/checkvet-logo-new.png";
@@ -12,6 +13,7 @@ const navItems = [
 ];
 
 export function Header() {
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -24,21 +26,41 @@ export function Header() {
   }, []);
 
   const scrollToSection = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+    // Se for uma âncora (#), faz scroll
+    if (href.startsWith("#")) {
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
     }
     setIsMobileMenuOpen(false);
   };
 
+  const handleLogin = () => {
+    navigate("/login");
+  };
+
+  const handleSignup = () => {
+    // Pode criar uma página de cadastro ou abrir o modal de contato
+    navigate("/login"); // Por enquanto vai para login, depois criar página de signup
+  };
+
+  const handleLogoClick = () => {
+    // Se estiver na home, faz scroll para o topo
+    if (window.location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      // Se estiver em outra página, navega para home
+      navigate("/");
+    }
+  };
+
   return (
-    <header
-      className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border"
-    >
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <button onClick={() => scrollToSection("#inicio")} className="flex items-center">
+          <button onClick={handleLogoClick} className="flex items-center">
             <img src={logo} alt="CheckVet" className="h-[120px] md:h-40 w-auto mt-2 md:mt-3" />
           </button>
 
@@ -57,10 +79,10 @@ export function Header() {
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => scrollToSection("#contato")}>
+            <Button variant="ghost" size="sm" onClick={handleLogin}>
               Login
             </Button>
-            <Button size="sm" onClick={() => scrollToSection("#contato")}>
+            <Button size="sm" onClick={handleSignup}>
               Cadastre-se
             </Button>
           </div>
@@ -89,10 +111,10 @@ export function Header() {
                 </button>
               ))}
               <div className="flex flex-col gap-2 px-4 pt-4 border-t border-border mt-2">
-                <Button variant="outline" onClick={() => scrollToSection("#contato")}>
+                <Button variant="outline" onClick={handleLogin}>
                   Login
                 </Button>
-                <Button onClick={() => scrollToSection("#contato")}>
+                <Button onClick={handleSignup}>
                   Cadastre-se
                 </Button>
               </div>

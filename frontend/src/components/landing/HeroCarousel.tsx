@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ const slides = [
 
 export function HeroCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const navigate = useNavigate();
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -57,11 +59,9 @@ export function HeroCarousel() {
     return () => clearInterval(interval);
   }, [nextSlide]);
 
-  const scrollToContact = () => {
-    const element = document.querySelector("#contato");
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
+  const handleCTA = () => {
+    // Redireciona para página de login
+    navigate("/login");
   };
 
   return (
@@ -100,7 +100,11 @@ export function HeroCarousel() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
-                <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground px-8" onClick={scrollToContact}>
+                <Button
+                  size="lg"
+                  className="bg-accent hover:bg-accent/90 text-accent-foreground px-8"
+                  onClick={handleCTA}
+                >
                   {slides[currentSlide].cta}
                 </Button>
               </motion.div>
@@ -131,9 +135,8 @@ export function HeroCarousel() {
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all ${
-              index === currentSlide ? "bg-primary w-8" : "bg-foreground/30"
-            }`}
+            className={`w-3 h-3 rounded-full transition-all ${index === currentSlide ? "bg-primary w-8" : "bg-foreground/30"
+              }`}
             aria-label={`Ir para slide ${index + 1}`}
           />
         ))}

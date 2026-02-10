@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import hilferLogo from "@/assets/hilfer-logo.png";
 
 const footerLinks = [
@@ -18,11 +19,25 @@ const footerLinks = [
 ];
 
 export function Footer() {
+  const navigate = useNavigate();
+
   const scrollToSection = (href: string) => {
     if (href.startsWith("#")) {
-      const element = document.querySelector(href);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
+      // Se estiver na home, faz scroll
+      if (window.location.pathname === "/") {
+        const element = document.querySelector(href);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      } else {
+        // Se estiver em outra página, navega para home e depois faz scroll
+        navigate("/");
+        setTimeout(() => {
+          const element = document.querySelector(href);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 100);
       }
     }
   };

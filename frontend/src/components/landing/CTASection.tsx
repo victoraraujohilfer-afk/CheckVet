@@ -1,18 +1,18 @@
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function CTASection() {
   const ref = useRef(null);
+  const navigate = useNavigate();
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
-  const scrollToContact = () => {
-    const element = document.querySelector("#contato");
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
+  const handleCTA = () => {
+    // Redireciona para página de login/cadastro
+    navigate("/login");
   };
 
   return (
@@ -34,7 +34,7 @@ export function CTASection() {
             size="lg"
             variant="secondary"
             className="bg-background text-primary hover:bg-background/90 px-8"
-            onClick={scrollToContact}
+            onClick={handleCTA}
           >
             Solicitar demonstração
             <ArrowRight className="ml-2 h-5 w-5" />
