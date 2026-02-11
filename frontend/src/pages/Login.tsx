@@ -1,33 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { Role } from "@/types/api";
 import logo from "@/assets/checkvet-logo-new.png";
 
 const Login = () => {
     const navigate = useNavigate();
+    const { login, user, isAuthenticated } = useAuth();
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
+    // Redirect when user becomes available after successful login
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            if (user.role === Role.ADMIN || user.role === Role.SUPERVISOR) {
+                navigate("/admin/dashboard", { replace: true });
+            } else {
+                navigate("/vet/dashboard", { replace: true });
+            }
+        }
+    }, [isAuthenticated, user, navigate]);
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // TODO: Integrar com Supabase
-        setTimeout(() => {
-            // Simulação de login - redirecionar baseado no tipo de usuário
-            if (email.includes("admin")) {
-                navigate("/admin/dashboard");
-            } else {
-                navigate("/vet/dashboard");
-            }
+        try {
+            await login(email, password);
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } }; message?: string };
+            const message =
+                error?.response?.data?.message ||
+                error?.message ||
+                "Credenciais inválidas. Tente novamente.";
+            toast.error(message);
+        } finally {
             setIsLoading(false);
-        }, 1000);
+        }
     };
 
     return (
@@ -162,22 +179,6 @@ const Login = () => {
                                     {isLoading ? "Entrando..." : "Entrar"}
                                 </Button>
                             </form>
-
-                            <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                                <p className="text-sm font-medium text-muted-foreground mb-2">
-                                    Credenciais de demonstração:
-                                </p>
-                                <div className="space-y-1 text-sm">
-                                    <p>
-                                        <span className="font-medium">Veterinário:</span>{" "}
-                                        <span className="text-muted-foreground">vet@checkvet.com / 123456</span>
-                                    </p>
-                                    <p>
-                                        <span className="font-medium">Administrador:</span>{" "}
-                                        <span className="text-muted-foreground">admin@checkvet.com / 123456</span>
-                                    </p>
-                                </div>
-                            </div>
                         </CardContent>
                     </Card>
 

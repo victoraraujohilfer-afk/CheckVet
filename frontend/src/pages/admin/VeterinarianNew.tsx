@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
     Select,
     SelectContent,
@@ -13,27 +12,24 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import {
-    Home,
-    Users,
-    BarChart3,
-    Settings,
-    LogOut,
     Save,
     ArrowLeft,
     User,
     FileText,
     Shield,
+    Loader2,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import AdminSidebar from "@/components/layout/AdminSidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCreateUser } from "@/hooks/useApiHooks";
+import { Role, Specialization } from "@/types/api";
+import { roleLabels, specializationLabels } from "@/utils/enum-labels";
+import { getInitials } from "@/utils/format";
 
 const VeterinarianNew = () => {
     const navigate = useNavigate();
-    const { toast } = useToast();
-    const [user] = useState({
-        name: "Dr. Roberto Mendes",
-        role: "Administrador",
-    });
+    const { user } = useAuth();
 
     const [formData, setFormData] = useState({
         name: "",
@@ -46,39 +42,46 @@ const VeterinarianNew = () => {
         confirmPassword: "",
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const createUser = useCreateUser();
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (formData.password !== formData.confirmPassword) {
-            toast({
-                title: "Erro",
-                description: "As senhas não coincidem.",
-                variant: "destructive",
-            });
+            toast.error("As senhas não coincidem.");
             return;
         }
 
-        // TODO: Integrar com backend
-        toast({
-            title: "Veterinário Cadastrado",
-            description: `${formData.name} foi adicionado com sucesso.`,
-        });
-
-        setTimeout(() => {
-            navigate("/admin/veterinarians");
-        }, 1500);
+        createUser.mutate(
+            {
+                fullName: formData.name,
+                email: formData.email,
+                password: formData.password,
+                role: (formData.role || Role.VETERINARIAN) as Role,
+                phone: formData.phone,
+                crmv: formData.crmv,
+                specialization: formData.specialization ? (formData.specialization as Specialization) : undefined,
+            },
+            {
+                onSuccess: () => {
+                    toast.success(`${formData.name} foi cadastrado com sucesso.`);
+                    navigate("/admin/veterinarians");
+                },
+                onError: (err: any) => {
+                    toast.error(err?.response?.data?.message ?? "Erro ao cadastrar veterinário");
+                },
+            }
+        );
     };
 
     return (
         <div className="min-h-screen bg-muted/30">
-            {/* Sidebar */}
             <AdminSidebar
-                userName={user.name}
-                userRole={user.role}
-                userInitials="RM"
+                userName={user?.fullName}
+                userRole={user?.role ? roleLabels[user.role] : undefined}
+                userInitials={user?.fullName ? getInitials(user.fullName) : "??"}
             />
 
-            {/* Main Content */}
             <main className="ml-64 p-8">
                 <div className="max-w-4xl mx-auto">
                     {/* Header */}
@@ -199,9 +202,9 @@ const VeterinarianNew = () => {
                                                 <SelectValue placeholder="Selecione" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="veterinarian">Veterinário</SelectItem>
-                                                <SelectItem value="supervisor">Supervisor</SelectItem>
-                                                <SelectItem value="coordinator">Coordenador</SelectItem>
+                                                <SelectItem value={Role.VETERINARIAN}>{roleLabels[Role.VETERINARIAN]}</SelectItem>
+                                                <SelectItem value={Role.SUPERVISOR}>{roleLabels[Role.SUPERVISOR]}</SelectItem>
+                                                <SelectItem value={Role.COORDINATOR}>{roleLabels[Role.COORDINATOR]}</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -218,12 +221,9 @@ const VeterinarianNew = () => {
                                                 <SelectValue placeholder="Selecione (opcional)" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="general">Clínica Geral</SelectItem>
-                                                <SelectItem value="surgery">Cirurgia</SelectItem>
-                                                <SelectItem value="dermatology">Dermatologia</SelectItem>
-                                                <SelectItem value="cardiology">Cardiologia</SelectItem>
-                                                <SelectItem value="orthopedics">Ortopedia</SelectItem>
-                                                <SelectItem value="oncology">Oncologia</SelectItem>
+                                                {Object.values(Specialization).map((s) => (
+                                                    <SelectItem key={s} value={s}>{specializationLabels[s]}</SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -275,8 +275,7 @@ const VeterinarianNew = () => {
 
                                 <div className="p-3 bg-muted/50 rounded-lg">
                                     <p className="text-sm text-muted-foreground">
-                                        💡 O veterinário receberá um email com as credenciais de acesso
-                                        e poderá alterar a senha no primeiro login.
+                                        O veterinário poderá alterar a senha no primeiro login.
                                     </p>
                                 </div>
                             </CardContent>
@@ -288,11 +287,16 @@ const VeterinarianNew = () => {
                                 type="button"
                                 variant="outline"
                                 onClick={() => navigate("/admin/veterinarians")}
+                                disabled={createUser.isPending}
                             >
                                 Cancelar
                             </Button>
-                            <Button type="submit" size="lg">
-                                <Save className="h-4 w-4 mr-2" />
+                            <Button type="submit" size="lg" disabled={createUser.isPending}>
+                                {createUser.isPending ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                    <Save className="h-4 w-4 mr-2" />
+                                )}
                                 Cadastrar Veterinário
                             </Button>
                         </div>

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsUUID, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsUUID, IsDateString, ValidateIf } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ConsultationType } from '@prisma/client';
 
@@ -17,7 +17,7 @@ export class CreateConsultationDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsUUID()
+  @ValidateIf((o) => o.protocolId !== '')
   protocolId?: string;
 
   @ApiPropertyOptional({ example: 'Animal apresentando apatia e falta de apetite' })

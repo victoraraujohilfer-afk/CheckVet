@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Home, Plus, History, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/checkvet-logo-new.png";
 
 interface VetSidebarProps {
@@ -17,15 +18,21 @@ const VetSidebar = ({
 }: VetSidebarProps) => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { logout } = useAuth();
 
     const isActive = (path: string) => location.pathname === path;
+
+    const handleLogout = async () => {
+        await logout();
+        navigate("/login");
+    };
 
     return (
         <aside className="fixed left-0 top-0 h-full w-64 bg-background border-r border-border flex flex-col">
             {/* Logo */}
             <div className="border-b border-border">
                 <button
-                    onClick={() => navigate("/")}
+                    onClick={() => navigate("/vet/dashboard")}
                     className="flex items-center gap-3 w-full"
                 >
                     <img
@@ -81,7 +88,7 @@ const VetSidebar = ({
                     variant="outline"
                     size="sm"
                     className="w-full"
-                    onClick={() => navigate("/login")}
+                    onClick={handleLogout}
                 >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sair

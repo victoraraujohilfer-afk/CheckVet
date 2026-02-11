@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
     Select,
     SelectContent,
@@ -16,71 +15,93 @@ import {
 import {
     ArrowLeft,
     Save,
-    Plus,
     CheckCircle2,
-    Home,
-    LogOut,
-    History,
     Search,
     PawPrint,
     User,
     ClipboardList,
+    Loader2,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import VetSidebar from "@/components/layout/VetSidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCreateOwner, useCreatePatient, useCreateConsultation, useProtocols } from "@/hooks/useApiHooks";
+import { Species, Gender, ConsultationType } from "@/types/api";
+import { speciesLabels, genderLabels, consultationTypeLabels } from "@/utils/enum-labels";
+import { getInitials } from "@/utils/format";
 
 const ConsultationNew = () => {
     const navigate = useNavigate();
-    const { toast } = useToast();
-    const [user] = useState({
-        name: "Dr. Carlos Silva",
-        role: "Veterinário",
-    });
+    const { user } = useAuth();
 
     const [formData, setFormData] = useState({
-        // Pet
         petName: "",
         petSpecies: "",
         petBreed: "",
         petAge: "",
         petWeight: "",
         petGender: "",
-
-        // Tutor
         ownerName: "",
         ownerPhone: "",
         ownerEmail: "",
-
-        // Consulta
         consultationType: "",
-        protocol: "",
+        protocolId: "",
         chiefComplaint: "",
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const { data: protocols } = useProtocols();
+    const createOwner = useCreateOwner();
+    const createPatient = useCreatePatient();
+    const createConsultation = useCreateConsultation();
+
+    const isSubmitting = createOwner.isPending || createPatient.isPending || createConsultation.isPending;
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // TODO: Integrar com backend
-        toast({
-            title: "Consulta Iniciada",
-            description: "Você será redirecionado para o checklist do protocolo.",
-        });
+        try {
+            const owner = await createOwner.mutateAsync({
+                fullName: formData.ownerName,
+                phone: formData.ownerPhone,
+                email: formData.ownerEmail || undefined,
+            });
 
-        setTimeout(() => {
-            navigate("/vet/consultation/1");
-        }, 1500);
+            const patient = await createPatient.mutateAsync({
+                name: formData.petName,
+                ownerId: owner.id,
+                species: formData.petSpecies as Species,
+                gender: formData.petGender as Gender,
+                breed: formData.petBreed || undefined,
+                age: formData.petAge || undefined,
+                weight: formData.petWeight ? parseFloat(formData.petWeight) : undefined,
+            });
+
+            const consultationData: Parameters<typeof createConsultation.mutateAsync>[0] = {
+                patientId: patient.id,
+                ownerId: owner.id,
+                type: formData.consultationType as ConsultationType,
+                date: new Date().toISOString(),
+            };
+            if (formData.protocolId) consultationData.protocolId = formData.protocolId;
+            if (formData.chiefComplaint) consultationData.chiefComplaint = formData.chiefComplaint;
+
+            const consultation = await createConsultation.mutateAsync(consultationData);
+
+            toast.success("Consulta iniciada com sucesso!");
+            navigate(`/vet/consultation/${consultation.id}`);
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message ?? "Erro ao iniciar consulta");
+        }
     };
 
     return (
         <div className="min-h-screen bg-muted/30">
-            {/* Sidebar */}
             <VetSidebar
-                userName={user.name}
-                userRole={user.role}
-                userInitials="CS"
+                userName={user?.fullName ?? ""}
+                userRole="Veterinário"
+                userInitials={getInitials(user?.fullName ?? "")}
             />
 
-            {/* Main Content */}
             <main className="ml-64 p-8">
                 <div className="max-w-4xl mx-auto">
                     {/* Header */}
@@ -151,10 +172,9 @@ const ConsultationNew = () => {
                                                 <SelectValue placeholder="Selecione" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="canine">Canino</SelectItem>
-                                                <SelectItem value="feline">Felino</SelectItem>
-                                                <SelectItem value="avian">Ave</SelectItem>
-                                                <SelectItem value="exotic">Exótico</SelectItem>
+                                                {Object.values(Species).map((s) => (
+                                                    <SelectItem key={s} value={s}>{speciesLabels[s]}</SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -184,8 +204,9 @@ const ConsultationNew = () => {
                                                 <SelectValue placeholder="Selecione" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="male">Macho</SelectItem>
-                                                <SelectItem value="female">Fêmea</SelectItem>
+                                                {Object.values(Gender).map((g) => (
+                                                    <SelectItem key={g} value={g}>{genderLabels[g]}</SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -301,44 +322,30 @@ const ConsultationNew = () => {
                                                 <SelectValue placeholder="Selecione" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="routine">Rotina</SelectItem>
-                                                <SelectItem value="vaccination">Vacinação</SelectItem>
-                                                <SelectItem value="emergency">Emergência</SelectItem>
-                                                <SelectItem value="surgery">Cirurgia</SelectItem>
-                                                <SelectItem value="return">Retorno</SelectItem>
-                                                <SelectItem value="exam">Exames</SelectItem>
+                                                {Object.values(ConsultationType).map((t) => (
+                                                    <SelectItem key={t} value={t}>{consultationTypeLabels[t]}</SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="protocol">Protocolo Clínico *</Label>
+                                        <Label htmlFor="protocol">Protocolo Clínico</Label>
                                         <Select
-                                            required
-                                            value={formData.protocol}
+                                            value={formData.protocolId}
                                             onValueChange={(value) =>
-                                                setFormData({ ...formData, protocol: value })
+                                                setFormData({ ...formData, protocolId: value })
                                             }
                                         >
                                             <SelectTrigger id="protocol">
                                                 <SelectValue placeholder="Selecione" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="general_exam">
-                                                    Exame Clínico Geral
-                                                </SelectItem>
-                                                <SelectItem value="vaccination">
-                                                    Protocolo de Vacinação
-                                                </SelectItem>
-                                                <SelectItem value="emergency">
-                                                    Atendimento de Emergência
-                                                </SelectItem>
-                                                <SelectItem value="pre_surgery">
-                                                    Pré-operatório Completo
-                                                </SelectItem>
-                                                <SelectItem value="post_surgery">
-                                                    Acompanhamento Pós-cirúrgico
-                                                </SelectItem>
+                                                {protocols?.map((p) => (
+                                                    <SelectItem key={p.id} value={p.id}>
+                                                        {p.name}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -384,11 +391,16 @@ const ConsultationNew = () => {
                                 type="button"
                                 variant="outline"
                                 onClick={() => navigate("/vet/dashboard")}
+                                disabled={isSubmitting}
                             >
                                 Cancelar
                             </Button>
-                            <Button type="submit" size="lg">
-                                <Save className="h-4 w-4 mr-2" />
+                            <Button type="submit" size="lg" disabled={isSubmitting}>
+                                {isSubmitting ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                    <Save className="h-4 w-4 mr-2" />
+                                )}
                                 Iniciar Consulta
                             </Button>
                         </div>

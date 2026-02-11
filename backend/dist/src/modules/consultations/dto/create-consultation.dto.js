@@ -34,7 +34,7 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)(),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.ValidateIf)((o) => o.protocolId !== ''),
     __metadata("design:type", String)
 ], CreateConsultationDto.prototype, "protocolId", void 0);
 __decorate([

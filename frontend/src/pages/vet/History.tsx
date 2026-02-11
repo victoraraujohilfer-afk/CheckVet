@@ -21,106 +21,44 @@ import {
     Clock,
     Download,
     Eye,
+    Loader2,
 } from "lucide-react";
 import VetSidebar from "@/components/layout/VetSidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useConsultations } from "@/hooks/useApiHooks";
+import {
+    consultationTypeLabels,
+    consultationStatusLabels,
+} from "@/utils/enum-labels";
+import { formatDate, formatTime, getInitials } from "@/utils/format";
+import { ConsultationType, ConsultationStatus } from "@/types/api";
 
 const VetHistory = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState("");
     const [filterType, setFilterType] = useState("all");
     const [filterStatus, setFilterStatus] = useState("all");
 
-    const consultations = [
-        {
-            id: 1,
-            petName: "Thor",
-            petBreed: "Cão - Golden Retriever",
-            owner: "João Silva",
-            type: "Rotina",
-            adherence: 95,
-            status: "completed",
-            date: "01/02/2026",
-            time: "14:30",
-            protocol: "Exame Clínico Geral",
-        },
-        {
-            id: 2,
-            petName: "Luna",
-            petBreed: "Gato - Persa",
-            owner: "Maria Santos",
-            type: "Vacinação",
-            adherence: 100,
-            status: "completed",
-            date: "01/02/2026",
-            time: "11:00",
-            protocol: "Protocolo de Vacinação Felina",
-        },
-        {
-            id: 3,
-            petName: "Bob",
-            petBreed: "Cão - Bulldog Francês",
-            owner: "Pedro Costa",
-            type: "Emergência",
-            adherence: 78,
-            status: "pending",
-            date: "31/01/2026",
-            time: "16:45",
-            protocol: "Atendimento de Emergência",
-        },
-        {
-            id: 4,
-            petName: "Mel",
-            petBreed: "Gato - Siamês",
-            owner: "Ana Oliveira",
-            type: "Rotina",
-            adherence: 92,
-            status: "completed",
-            date: "30/01/2026",
-            time: "10:15",
-            protocol: "Exame Clínico Geral",
-        },
-        {
-            id: 5,
-            petName: "Rex",
-            petBreed: "Cão - Pastor Alemão",
-            owner: "Carlos Ferreira",
-            type: "Cirurgia",
-            adherence: 88,
-            status: "completed",
-            date: "29/01/2026",
-            time: "09:00",
-            protocol: "Pré-operatório Completo",
-        },
-        {
-            id: 6,
-            petName: "Mimi",
-            petBreed: "Gato - Pelo Curto",
-            owner: "Juliana Lima",
-            type: "Retorno",
-            adherence: 94,
-            status: "completed",
-            date: "28/01/2026",
-            time: "15:20",
-            protocol: "Acompanhamento Pós-cirúrgico",
-        },
-    ];
-
-    const filteredConsultations = consultations.filter((consultation) => {
-        const matchesSearch =
-            consultation.petName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            consultation.owner.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesType = filterType === "all" || consultation.type === filterType;
-        const matchesStatus = filterStatus === "all" || consultation.status === filterStatus;
-        return matchesSearch && matchesType && matchesStatus;
+    const { data, isLoading } = useConsultations({
+        veterinarianId: user?.id,
+        search: searchTerm || undefined,
+        type: filterType !== "all" ? filterType : undefined,
+        status: filterStatus !== "all" ? filterStatus : undefined,
     });
+
+    const consultations = data?.consultations ?? [];
+
+    const isCompleted = (status: string) =>
+        status === ConsultationStatus.COMPLETED;
 
     return (
         <div className="min-h-screen bg-muted/30">
-            {/* Sidebar (same as dashboard) */}
+            {/* Sidebar */}
             <VetSidebar
-                userName="Dr. Carlos Silva"
+                userName={user?.fullName ?? ""}
                 userRole="Veterinário"
-                userInitials="CS"
+                userInitials={getInitials(user?.fullName ?? "")}
             />
 
             {/* Main Content */}
@@ -169,11 +107,11 @@ const VetHistory = () => {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos os tipos</SelectItem>
-                                        <SelectItem value="Rotina">Rotina</SelectItem>
-                                        <SelectItem value="Vacinação">Vacinação</SelectItem>
-                                        <SelectItem value="Emergência">Emergência</SelectItem>
-                                        <SelectItem value="Cirurgia">Cirurgia</SelectItem>
-                                        <SelectItem value="Retorno">Retorno</SelectItem>
+                                        {Object.values(ConsultationType).map((type) => (
+                                            <SelectItem key={type} value={type}>
+                                                {consultationTypeLabels[type]}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
 
@@ -183,8 +121,11 @@ const VetHistory = () => {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">Todos os status</SelectItem>
-                                        <SelectItem value="completed">Concluído</SelectItem>
-                                        <SelectItem value="pending">Pendente</SelectItem>
+                                        {Object.values(ConsultationStatus).map((status) => (
+                                            <SelectItem key={status} value={status}>
+                                                {consultationStatusLabels[status]}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -195,10 +136,10 @@ const VetHistory = () => {
                     <div className="flex items-center justify-between mb-6">
                         <p className="text-sm text-muted-foreground">
                             <span className="font-medium text-foreground">
-                                {filteredConsultations.length}
+                                {data?.total ?? consultations.length}
                             </span>{" "}
-                            consulta{filteredConsultations.length !== 1 ? "s" : ""} encontrada
-                            {filteredConsultations.length !== 1 ? "s" : ""}
+                            consulta{(data?.total ?? consultations.length) !== 1 ? "s" : ""} encontrada
+                            {(data?.total ?? consultations.length) !== 1 ? "s" : ""}
                         </p>
                         <Button variant="outline" size="sm">
                             <Download className="h-4 w-4 mr-2" />
@@ -206,134 +147,142 @@ const VetHistory = () => {
                         </Button>
                     </div>
 
-                    {/* Consultations List */}
-                    <div className="space-y-4">
-                        {filteredConsultations.map((consultation) => (
-                            <Card key={consultation.id} className="hover:shadow-md transition-shadow">
-                                <CardContent className="p-6">
-                                    <div className="flex items-start gap-6">
-                                        {/* Status Icon */}
-                                        <div className="flex-shrink-0">
-                                            <div
-                                                className={`w-14 h-14 rounded-full flex items-center justify-center ${consultation.status === "completed"
-                                                    ? "bg-green-100"
-                                                    : "bg-orange-100"
-                                                    }`}
-                                            >
-                                                {consultation.status === "completed" ? (
-                                                    <CheckCircle2 className="h-7 w-7 text-green-600" />
-                                                ) : (
-                                                    <AlertCircle className="h-7 w-7 text-orange-600" />
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Main Info */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div>
-                                                    <h3 className="text-lg font-semibold text-foreground mb-1">
-                                                        {consultation.petName}{" "}
-                                                        <span className="text-sm font-normal text-muted-foreground">
-                                                            ({consultation.petBreed})
-                                                        </span>
-                                                    </h3>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Tutor: {consultation.owner}
-                                                    </p>
-                                                </div>
-
-                                                <Badge
-                                                    variant={
-                                                        consultation.status === "completed"
-                                                            ? "default"
-                                                            : "secondary"
-                                                    }
-                                                >
-                                                    {consultation.status === "completed"
-                                                        ? "Concluído"
-                                                        : "Pendente"}
-                                                </Badge>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                                <div>
-                                                    <p className="text-xs text-muted-foreground mb-1">
-                                                        Tipo
-                                                    </p>
-                                                    <p className="text-sm font-medium">{consultation.type}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs text-muted-foreground mb-1">
-                                                        Protocolo
-                                                    </p>
-                                                    <p className="text-sm font-medium">
-                                                        {consultation.protocol}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs text-muted-foreground mb-1">
-                                                        Data/Hora
-                                                    </p>
-                                                    <p className="text-sm font-medium flex items-center gap-1">
-                                                        <Clock className="h-3 w-3" />
-                                                        {consultation.date} às {consultation.time}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs text-muted-foreground mb-1">
-                                                        Aderência
-                                                    </p>
-                                                    <p
-                                                        className={`text-sm font-bold ${consultation.adherence >= 90
-                                                            ? "text-green-600"
-                                                            : consultation.adherence >= 70
-                                                                ? "text-orange-600"
-                                                                : "text-red-600"
+                    {isLoading ? (
+                        <div className="flex items-center justify-center py-20">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                    ) : (
+                        <>
+                            {/* Consultations List */}
+                            <div className="space-y-4">
+                                {consultations.map((consultation) => (
+                                    <Card key={consultation.id} className="hover:shadow-md transition-shadow">
+                                        <CardContent className="p-6">
+                                            <div className="flex items-start gap-6">
+                                                {/* Status Icon */}
+                                                <div className="flex-shrink-0">
+                                                    <div
+                                                        className={`w-14 h-14 rounded-full flex items-center justify-center ${isCompleted(consultation.status)
+                                                            ? "bg-green-100"
+                                                            : "bg-orange-100"
                                                             }`}
                                                     >
-                                                        {consultation.adherence}%
-                                                    </p>
+                                                        {isCompleted(consultation.status) ? (
+                                                            <CheckCircle2 className="h-7 w-7 text-green-600" />
+                                                        ) : (
+                                                            <AlertCircle className="h-7 w-7 text-orange-600" />
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Main Info */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-start justify-between mb-3">
+                                                        <div>
+                                                            <h3 className="text-lg font-semibold text-foreground mb-1">
+                                                                {consultation.patient?.name ?? "—"}{" "}
+                                                                <span className="text-sm font-normal text-muted-foreground">
+                                                                    ({consultation.patient?.breed ?? "—"})
+                                                                </span>
+                                                            </h3>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                Tutor: {consultation.owner?.fullName ?? "—"}
+                                                            </p>
+                                                        </div>
+
+                                                        <Badge
+                                                            variant={
+                                                                isCompleted(consultation.status)
+                                                                    ? "default"
+                                                                    : "secondary"
+                                                            }
+                                                        >
+                                                            {consultationStatusLabels[consultation.status]}
+                                                        </Badge>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground mb-1">
+                                                                Tipo
+                                                            </p>
+                                                            <p className="text-sm font-medium">
+                                                                {consultationTypeLabels[consultation.type]}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground mb-1">
+                                                                Protocolo
+                                                            </p>
+                                                            <p className="text-sm font-medium">
+                                                                {consultation.protocol?.name ?? "—"}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground mb-1">
+                                                                Data/Hora
+                                                            </p>
+                                                            <p className="text-sm font-medium flex items-center gap-1">
+                                                                <Clock className="h-3 w-3" />
+                                                                {formatDate(consultation.date)} às {formatTime(consultation.date)}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground mb-1">
+                                                                Aderência
+                                                            </p>
+                                                            <p
+                                                                className={`text-sm font-bold ${(consultation.adherencePercentage ?? 0) >= 90
+                                                                    ? "text-green-600"
+                                                                    : (consultation.adherencePercentage ?? 0) >= 70
+                                                                        ? "text-orange-600"
+                                                                        : "text-red-600"
+                                                                    }`}
+                                                            >
+                                                                {consultation.adherencePercentage ?? 0}%
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() =>
+                                                                navigate(`/vet/consultation/${consultation.id}`)
+                                                            }
+                                                        >
+                                                            <Eye className="h-4 w-4 mr-2" />
+                                                            Ver Detalhes
+                                                        </Button>
+                                                        <Button size="sm" variant="ghost">
+                                                            <Download className="h-4 w-4 mr-2" />
+                                                            Baixar Prontuário
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
 
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        navigate(`/vet/consultation/${consultation.id}`)
-                                                    }
-                                                >
-                                                    <Eye className="h-4 w-4 mr-2" />
-                                                    Ver Detalhes
-                                                </Button>
-                                                <Button size="sm" variant="ghost">
-                                                    <Download className="h-4 w-4 mr-2" />
-                                                    Baixar Prontuário
-                                                </Button>
-                                            </div>
+                            {consultations.length === 0 && (
+                                <Card>
+                                    <CardContent className="p-12 text-center">
+                                        <div className="w-16 h-16 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
+                                            <Search className="h-8 w-8 text-muted-foreground" />
                                         </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-
-                    {filteredConsultations.length === 0 && (
-                        <Card>
-                            <CardContent className="p-12 text-center">
-                                <div className="w-16 h-16 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
-                                    <Search className="h-8 w-8 text-muted-foreground" />
-                                </div>
-                                <h3 className="text-lg font-semibold mb-2">
-                                    Nenhuma consulta encontrada
-                                </h3>
-                                <p className="text-muted-foreground">
-                                    Tente ajustar os filtros ou termo de busca
-                                </p>
-                            </CardContent>
-                        </Card>
+                                        <h3 className="text-lg font-semibold mb-2">
+                                            Nenhuma consulta encontrada
+                                        </h3>
+                                        <p className="text-muted-foreground">
+                                            Tente ajustar os filtros ou termo de busca
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </>
                     )}
                 </div>
             </main>
