@@ -1,0 +1,255 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  VETERINARIAN
+  SUPERVISOR
+  COORDINATOR
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  WARNING
+}
+
+enum Species {
+  CANINE
+  FELINE
+  AVIAN
+  EXOTIC
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum ConsultationType {
+  ROUTINE
+  VACCINATION
+  EMERGENCY
+  SURGERY
+  RETURN
+  EXAM
+}
+
+enum ConsultationStatus {
+  COMPLETED
+  PENDING
+  IN_PROGRESS
+}
+
+enum ProtocolType {
+  GENERAL_EXAM
+  VACCINATION
+  EMERGENCY
+  PRE_SURGERY
+  POST_SURGERY
+}
+
+enum Specialization {
+  GENERAL
+  SURGERY
+  DERMATOLOGY
+  CARDIOLOGY
+  ORTHOPEDICS
+  ONCOLOGY
+}
+
+enum BackupFrequency {
+  HOURLY
+  DAILY
+  WEEKLY
+}
+
+// ─── Models ──────────────────────────────────────────────
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  passwordHash   String          @map("password_hash")
+  fullName       String          @map("full_name")
+  phone          String?
+  role           Role            @default(VETERINARIAN)
+  crmv           String?
+  specialization Specialization?
+  clinicName     String?         @map("clinic_name")
+  status         UserStatus      @default(ACTIVE)
+  refreshToken   String?         @map("refresh_token")
+  lastLogin      DateTime?       @map("last_login")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  consultations Consultation[]
+
+  @@map("users")
+}
+
+model Owner {
+  id        String   @id @default(uuid())
+  fullName  String   @map("full_name")
+  email     String?
+  phone     String
+  address   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  patients      Patient[]
+  consultations Consultation[]
+
+  @@map("owners")
+}
+
+model Patient {
+  id        String   @id @default(uuid())
+  name      String
+  ownerId   String   @map("owner_id")
+  species   Species
+  breed     String?
+  gender    Gender
+  age       String?
+  weight    Decimal? @db.Decimal(5, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  owner         Owner          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  consultations Consultation[]
+
+  @@map("patients")
+}
+
+model Protocol {
+  id          String       @id @default(uuid())
+  name        String
+  description String?
+  type        ProtocolType
+  isActive    Boolean      @default(true) @map("is_active")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  items         ProtocolItem[]
+  consultations Consultation[]
+
+  @@map("protocols")
+}
+
+model ProtocolItem {
+  id         String  @id @default(uuid())
+  protocolId String  @map("protocol_id")
+  name       String
+  order      Int
+  isRequired Boolean @default(true) @map("is_required")
+
+  protocol           Protocol                @relation(fields: [protocolId], references: [id], onDelete: Cascade)
+  consultationChecks ConsultationChecklist[]
+
+  @@map("protocol_items")
+}
+
+model Consultation {
+  id                  String             @id @default(uuid())
+  patientId           String             @map("patient_id")
+  ownerId             String             @map("owner_id")
+  veterinarianId      String             @map("veterinarian_id")
+  protocolId          String?            @map("protocol_id")
+  type                ConsultationType
+  chiefComplaint      String?            @map("chief_complaint")
+  date                DateTime
+  status              ConsultationStatus @default(PENDING)
+  adherencePercentage Int?               @default(0) @map("adherence_percentage")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+
+  patient      Patient                 @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  owner        Owner                   @relation(fields: [ownerId], references: [id])
+  veterinarian User                    @relation(fields: [veterinarianId], references: [id])
+  protocol     Protocol?               @relation(fields: [protocolId], references: [id])
+  checklist    ConsultationChecklist[]
+  soapNote     SoapNote?
+  procedures   Procedure[]
+  attachments  Attachment[]
+
+  @@map("consultations")
+}
+
+model ConsultationChecklist {
+  id             String    @id @default(uuid())
+  consultationId String    @map("consultation_id")
+  protocolItemId String    @map("protocol_item_id")
+  completed      Boolean   @default(false)
+  completedAt    DateTime? @map("completed_at")
+  notes          String?
+
+  consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  protocolItem ProtocolItem @relation(fields: [protocolItemId], references: [id])
+
+  @@unique([consultationId, protocolItemId])
+  @@map("consultation_checklists")
+}
+
+model SoapNote {
+  id             String   @id @default(uuid())
+  consultationId String   @unique @map("consultation_id")
+  subjective     String?
+  objectiveData  Json?    @map("objective_data")
+  assessment     String?
+  plan           String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+
+  @@map("soap_notes")
+}
+
+model Procedure {
+  id             String   @id @default(uuid())
+  consultationId String   @map("consultation_id")
+  name           String
+  code           String?
+  value          Decimal? @db.Decimal(10, 2)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+
+  @@map("procedures")
+}
+
+model Attachment {
+  id             String   @id @default(uuid())
+  consultationId String   @map("consultation_id")
+  fileName       String   @map("file_name")
+  fileSize       String?  @map("file_size")
+  fileType       String?  @map("file_type")
+  fileUrl        String   @map("file_url")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  consultation Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+model SystemSettings {
+  id                   String          @id @default("default")
+  hospitalName         String          @default("CheckVet Hospital") @map("hospital_name")
+  emailNotifications   Boolean         @default(true) @map("email_notifications")
+  smsNotifications     Boolean         @default(false) @map("sms_notifications")
+  adherenceThreshold   Int             @default(80) @map("adherence_threshold")
+  autoBackup           Boolean         @default(true) @map("auto_backup")
+  backupFrequency      BackupFrequency @default(DAILY) @map("backup_frequency")
+  requireDocumentation Boolean         @default(true) @map("require_documentation")
+  allowEditing         Boolean         @default(true) @map("allow_editing")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
