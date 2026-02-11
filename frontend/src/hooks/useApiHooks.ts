@@ -23,9 +23,10 @@ export function useConsultations(params?: {
   });
 }
 
+// ✅ CORRIGIDO: Mudei 'consultations' para 'consultation' (singular)
 export function useConsultation(id: string) {
   return useQuery({
-    queryKey: ['consultations', id],
+    queryKey: ['consultation', id],  // ✅ AGORA BATE COM A INVALIDAÇÃO
     queryFn: () => consultationsService.findOne(id),
     enabled: !!id,
   });
@@ -60,8 +61,9 @@ export function useUpdateChecklist() {
       itemId: string;
       data: { completed: boolean; notes?: string };
     }) => consultationsService.updateChecklistItem(consultationId, itemId, data),
-    onSuccess: (_, vars) =>
-      qc.invalidateQueries({ queryKey: ['consultations', vars.consultationId] }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['consultation', vars.consultationId] });
+    },
   });
 }
 

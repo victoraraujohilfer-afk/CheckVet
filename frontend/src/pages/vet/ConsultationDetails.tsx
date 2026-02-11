@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
 import {
     ArrowLeft,
     Download,
@@ -20,7 +22,7 @@ import {
 } from "lucide-react";
 import VetSidebar from "@/components/layout/VetSidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { useConsultation } from "@/hooks/useApiHooks";
+import { useConsultation, useUpdateChecklist } from "@/hooks/useApiHooks";
 import { consultationTypeLabels, consultationStatusLabels } from "@/utils/enum-labels";
 import { formatDate, formatTime, formatDateTime, formatCurrency, getInitials } from "@/utils/format";
 import { ConsultationStatus } from "@/types/api";
@@ -31,6 +33,29 @@ const ConsultationDetails = () => {
     const { user } = useAuth();
 
     const { data: consultation, isLoading } = useConsultation(id ?? "");
+
+    // ✅ USA O HOOK EXISTENTE
+    const updateChecklistMutation = useUpdateChecklist();
+
+    const handleChecklistToggle = (itemId: string, currentState: boolean) => {
+        if (!id) return;
+
+        updateChecklistMutation.mutate(
+            {
+                consultationId: id,
+                itemId,
+                data: { completed: !currentState }
+            },
+            {
+                onSuccess: () => {
+                    toast.success("Checklist atualizado!");
+                },
+                onError: () => {
+                    toast.error("Erro ao atualizar checklist");
+                }
+            }
+        );
+    };
 
     const completedItems = consultation?.checklist?.filter(item => item.completed).length ?? 0;
     const totalItems = consultation?.checklist?.length ?? 0;
@@ -113,7 +138,7 @@ const ConsultationDetails = () => {
 
                                         <div className="text-right">
                                             <div
-                                                className={`text-5xl font-bold mb-1 ${adherencePercentage >= 90
+                                                className={`text-5xl font-bold mb-1 transition-colors ${adherencePercentage >= 90
                                                     ? "text-green-600"
                                                     : adherencePercentage >= 70
                                                         ? "text-orange-600"
@@ -133,82 +158,77 @@ const ConsultationDetails = () => {
                                 </CardContent>
                             </Card>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                                {/* Informações Gerais */}
-                                <Card className="lg:col-span-2">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <FileText className="h-5 w-5" />
-                                            Informações da Consulta
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground mb-1">Tipo</p>
-                                                <Badge variant="default">{consultationTypeLabels[consultation.type]}</Badge>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground mb-1">Protocolo</p>
-                                                <p className="text-sm font-medium">{consultation.protocol?.name ?? "—"}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                                                    <Calendar className="h-3 w-3" />
-                                                    Data
-                                                </p>
-                                                <p className="text-sm font-medium">{formatDate(consultation.date)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                                                    <Clock className="h-3 w-3" />
-                                                    Horário
-                                                </p>
-                                                <p className="text-sm font-medium">{formatTime(consultation.date)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                                                    <Stethoscope className="h-3 w-3" />
-                                                    Veterinário
-                                                </p>
-                                                <p className="text-sm font-medium">{consultation.veterinarian?.fullName ?? "—"}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground mb-1">CRMV</p>
-                                                <p className="text-sm font-medium">{consultation.veterinarian?.crmv ?? "—"}</p>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-
-                                {/* Informações do Tutor */}
+                            {/* Info Grid */}
+                            <div className="grid md:grid-cols-2 gap-6 mb-6">
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
                                             <User className="h-5 w-5" />
-                                            Tutor
+                                            Informações do Paciente
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-3">
                                         <div>
-                                            <p className="text-xs text-muted-foreground mb-1">Nome</p>
-                                            <p className="text-sm font-medium">{consultation.owner?.fullName ?? "—"}</p>
+                                            <p className="text-sm text-muted-foreground">Nome</p>
+                                            <p className="font-medium">{consultation.patient?.name ?? "—"}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground mb-1">Telefone</p>
-                                            <p className="text-sm font-medium">{consultation.owner?.phone ?? "—"}</p>
+                                            <p className="text-sm text-muted-foreground">Tutor</p>
+                                            <p className="font-medium">{consultation.owner?.fullName ?? "—"}</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-muted-foreground mb-1">Email</p>
-                                            <p className="text-sm font-medium text-primary">
-                                                {consultation.owner?.email ?? "—"}
+                                            <p className="text-sm text-muted-foreground">Contato</p>
+                                            <p className="font-medium">{consultation.owner?.phone ?? "—"}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Stethoscope className="h-5 w-5" />
+                                            Informações da Consulta
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Tipo</p>
+                                            <Badge variant="outline">
+                                                {consultationTypeLabels[consultation.type]}
+                                            </Badge>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Data</p>
+                                            <p className="font-medium flex items-center gap-2">
+                                                <Calendar className="h-4 w-4" />
+                                                {formatDate(consultation.date)}
                                             </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Status</p>
+                                            <Badge
+                                                variant={isCompleted ? "default" : "secondary"}
+                                            >
+                                                {consultationStatusLabels[consultation.status]}
+                                            </Badge>
                                         </div>
                                     </CardContent>
                                 </Card>
                             </div>
 
-                            {/* SOAP */}
+                            {/* Chief Complaint */}
+                            {consultation.chiefComplaint && (
+                                <Card className="mb-6">
+                                    <CardHeader>
+                                        <CardTitle>Queixa Principal</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-muted-foreground">{consultation.chiefComplaint}</p>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* SOAP Notes */}
                             {consultation.soapNote && (
                                 <Card className="mb-6">
                                     <CardHeader>
@@ -216,74 +236,38 @@ const ConsultationDetails = () => {
                                             <Activity className="h-5 w-5" />
                                             Prontuário SOAP
                                         </CardTitle>
-                                        <CardDescription>
-                                            Subjetivo, Objetivo, Avaliação e Plano
-                                        </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-6">
-                                        {/* Subjetivo */}
                                         <div>
-                                            <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                                                <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs flex items-center justify-center font-bold">
-                                                    S
-                                                </span>
-                                                Subjetivo
-                                            </h3>
-                                            <p className="text-sm text-muted-foreground pl-8">
+                                            <h3 className="font-semibold text-sm mb-2 text-primary">Subjetivo (S)</h3>
+                                            <div className="text-sm text-muted-foreground pl-4">
                                                 {consultation.soapNote.subjective ?? "Não registrado"}
-                                            </p>
+                                            </div>
                                         </div>
-
                                         <Separator />
-
-                                        {/* Objetivo */}
                                         <div>
-                                            <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                                                <span className="w-6 h-6 rounded-full bg-green-100 text-green-600 text-xs flex items-center justify-center font-bold">
-                                                    O
-                                                </span>
-                                                Objetivo
-                                            </h3>
-                                            {consultation.soapNote.objectiveData && Object.keys(consultation.soapNote.objectiveData).length > 0 ? (
-                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pl-8">
-                                                    {Object.entries(consultation.soapNote.objectiveData).map(([key, value]) => (
-                                                        <div key={key} className="p-3 bg-muted/50 rounded-lg">
-                                                            <p className="text-xs text-muted-foreground mb-1">{key}</p>
-                                                            <p className="text-sm font-medium">{value}</p>
+                                            <h3 className="font-semibold text-sm mb-2 text-primary">Objetivo (O)</h3>
+                                            <div className="text-sm text-muted-foreground pl-4">
+                                                {consultation.soapNote.objectiveData
+                                                    ? Object.entries(consultation.soapNote.objectiveData).map(([key, value]) => (
+                                                        <div key={key} className="mb-1">
+                                                            <span className="font-medium">{key}:</span> {value}
                                                         </div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <p className="text-sm text-muted-foreground pl-8">Não registrado</p>
-                                            )}
+                                                    ))
+                                                    : "Não registrado"}
+                                            </div>
                                         </div>
-
                                         <Separator />
-
-                                        {/* Avaliação */}
                                         <div>
-                                            <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                                                <span className="w-6 h-6 rounded-full bg-orange-100 text-orange-600 text-xs flex items-center justify-center font-bold">
-                                                    A
-                                                </span>
-                                                Avaliação
-                                            </h3>
-                                            <p className="text-sm text-muted-foreground pl-8">
+                                            <h3 className="font-semibold text-sm mb-2 text-primary">Avaliação (A)</h3>
+                                            <div className="text-sm text-muted-foreground pl-4">
                                                 {consultation.soapNote.assessment ?? "Não registrado"}
-                                            </p>
+                                            </div>
                                         </div>
-
                                         <Separator />
-
-                                        {/* Plano */}
                                         <div>
-                                            <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                                                <span className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-xs flex items-center justify-center font-bold">
-                                                    P
-                                                </span>
-                                                Plano
-                                            </h3>
-                                            <div className="text-sm text-muted-foreground pl-8 whitespace-pre-line">
+                                            <h3 className="font-semibold text-sm mb-2 text-primary">Plano (P)</h3>
+                                            <div className="text-sm text-muted-foreground pl-4 whitespace-pre-line">
                                                 {consultation.soapNote.plan ?? "Não registrado"}
                                             </div>
                                         </div>
@@ -291,7 +275,7 @@ const ConsultationDetails = () => {
                                 </Card>
                             )}
 
-                            {/* Checklist do Protocolo */}
+                            {/* ✅ CHECKLIST INTERATIVO - VERSÃO FINAL */}
                             {consultation.checklist && consultation.checklist.length > 0 && (
                                 <Card className="mb-6">
                                     <CardHeader>
@@ -308,25 +292,43 @@ const ConsultationDetails = () => {
                                             {consultation.checklist.map((item) => (
                                                 <div
                                                     key={item.id}
-                                                    className={`flex items-center justify-between p-3 rounded-lg border ${item.completed
-                                                        ? "bg-green-50 border-green-200"
-                                                        : "bg-orange-50 border-orange-200"
+                                                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${item.completed
+                                                            ? "bg-green-50 border-green-200"
+                                                            : "bg-orange-50 border-orange-200"
+                                                        } ${updateChecklistMutation.isPending
+                                                            ? "opacity-50 cursor-wait"
+                                                            : "cursor-pointer hover:shadow-sm"
                                                         }`}
+                                                    onClick={(e) => {
+                                                        if ((e.target as HTMLElement).closest('button')) return;
+                                                        handleChecklistToggle(item.protocolItemId, item.completed);
+                                                    }}
                                                 >
-                                                    <div className="flex items-center gap-3">
+                                                    <Checkbox
+                                                        checked={item.completed}
+                                                        onCheckedChange={() =>
+                                                            handleChecklistToggle(item.protocolItemId, item.completed)
+                                                        }
+                                                        disabled={updateChecklistMutation.isPending}
+                                                        className="flex-shrink-0"
+                                                    />
+
+                                                    <div className="flex items-center gap-3 flex-1">
                                                         {item.completed ? (
                                                             <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
                                                         ) : (
                                                             <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0" />
                                                         )}
                                                         <span
-                                                            className={`text-sm font-medium ${item.completed ? "text-green-900" : "text-orange-900"}`}
+                                                            className={`text-sm font-medium ${item.completed ? "text-green-900" : "text-orange-900"
+                                                                }`}
                                                         >
                                                             {item.protocolItem?.name ?? "Item"}
                                                         </span>
                                                     </div>
+
                                                     {item.completedAt && (
-                                                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                                        <span className="text-xs text-muted-foreground flex items-center gap-1 flex-shrink-0">
                                                             <Clock className="h-3 w-3" />
                                                             {formatTime(item.completedAt)}
                                                         </span>

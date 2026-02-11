@@ -38,7 +38,7 @@ export const consultationsService = {
     api.patch<{ data: Consultation }>(`/consultations/${id}`, data).then((r) => r.data.data),
 
   updateChecklistItem: (consultationId: string, itemId: string, data: { completed: boolean; notes?: string }) =>
-    api.patch(`/consultations/${consultationId}/checklist/${itemId}`, data).then((r) => r.data.data),
+    api.patch(`/consultations/${consultationId}/checklist/${itemId}`, data).then((r) => r.data),
 
   remove: (id: string) =>
     api.delete(`/consultations/${id}`).then((r) => r.data.data),
