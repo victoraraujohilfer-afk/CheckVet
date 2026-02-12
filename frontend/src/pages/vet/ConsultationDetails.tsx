@@ -1,10 +1,9 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
 import {
     ArrowLeft,
     Download,
@@ -19,6 +18,7 @@ import {
     ClipboardList,
     Activity,
     Loader2,
+    Mic,
 } from "lucide-react";
 import VetSidebar from "@/components/layout/VetSidebar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,44 +26,44 @@ import { useConsultation, useUpdateChecklist } from "@/hooks/useApiHooks";
 import { consultationTypeLabels, consultationStatusLabels } from "@/utils/enum-labels";
 import { formatDate, formatTime, formatDateTime, formatCurrency, getInitials } from "@/utils/format";
 import { ConsultationStatus } from "@/types/api";
+import TranscriptionRecorder from "@/components/transcription/TranscriptionRecorder";
+import ChecklistWithAI from "@/components/transcription/ChecklistWithAI";
 
 const ConsultationDetails = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const { user } = useAuth();
 
+    // Estado para controlar transcrição
+    const [showTranscription, setShowTranscription] = useState(false);
+
     const { data: consultation, isLoading } = useConsultation(id ?? "");
+    const toggleMutation = useUpdateChecklist();
 
-    // ✅ USA O HOOK EXISTENTE
-    const updateChecklistMutation = useUpdateChecklist();
-
-    const handleChecklistToggle = (itemId: string, currentState: boolean) => {
-        if (!id) return;
-
-        updateChecklistMutation.mutate(
-            {
-                consultationId: id,
-                itemId,
-                data: { completed: !currentState }
-            },
-            {
-                onSuccess: () => {
-                    toast.success("Checklist atualizado!");
-                },
-                onError: () => {
-                    toast.error("Erro ao atualizar checklist");
-                }
-            }
-        );
-    };
-
-    const completedItems = consultation?.checklist?.filter(item => item.completed).length ?? 0;
+    const completedItems = consultation?.checklist?.filter((item) => item.completed).length ?? 0;
     const totalItems = consultation?.checklist?.length ?? 0;
-    const adherencePercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : (consultation?.adherencePercentage ?? 0);
+    const adherencePercentage =
+        totalItems > 0
+            ? Math.round((completedItems / totalItems) * 100)
+            : consultation?.adherencePercentage ?? 0;
 
     const isCompleted = consultation?.status === ConsultationStatus.COMPLETED;
 
-    const totalProceduresValue = consultation?.procedures?.reduce((sum, p) => sum + (p.value ?? 0), 0) ?? 0;
+    const totalProceduresValue =
+        consultation?.procedures?.reduce((sum, p) => sum + (p.value ?? 0), 0) ?? 0;
+
+    // ✅ CORRIGIDO: Handler com itemId e data wrapper
+    const handleChecklistToggle = (itemId: string, currentState: boolean) => {
+        if (!id) return;
+
+        toggleMutation.mutate({
+            consultationId: id,
+            itemId: itemId,
+            data: {
+                completed: !currentState,
+            },
+        });
+    };
 
     return (
         <div className="min-h-screen bg-muted/30">
@@ -118,7 +118,8 @@ const ConsultationDetails = () => {
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4">
                                             <div
-                                                className={`w-16 h-16 rounded-full flex items-center justify-center ${isCompleted ? "bg-green-100" : "bg-orange-100"}`}
+                                                className={`w-16 h-16 rounded-full flex items-center justify-center ${isCompleted ? "bg-green-100" : "bg-orange-100"
+                                                    }`}
                                             >
                                                 {isCompleted ? (
                                                     <CheckCircle2 className="h-8 w-8 text-green-600" />
@@ -131,18 +132,22 @@ const ConsultationDetails = () => {
                                                     {consultation.patient?.name ?? "—"}
                                                 </h2>
                                                 <p className="text-muted-foreground">
-                                                    {consultation.patient?.breed ?? "—"} • {consultation.patient?.age ?? "—"} • {consultation.patient?.weight ? `${consultation.patient.weight} kg` : "—"}
+                                                    {consultation.patient?.breed ?? "—"} •{" "}
+                                                    {consultation.patient?.age ?? "—"} •{" "}
+                                                    {consultation.patient?.weight
+                                                        ? `${consultation.patient.weight} kg`
+                                                        : "—"}
                                                 </p>
                                             </div>
                                         </div>
 
                                         <div className="text-right">
                                             <div
-                                                className={`text-5xl font-bold mb-1 transition-colors ${adherencePercentage >= 90
-                                                    ? "text-green-600"
-                                                    : adherencePercentage >= 70
-                                                        ? "text-orange-600"
-                                                        : "text-red-600"
+                                                className={`text-5xl font-bold mb-1 ${adherencePercentage >= 90
+                                                        ? "text-green-600"
+                                                        : adherencePercentage >= 70
+                                                            ? "text-orange-600"
+                                                            : "text-red-600"
                                                     }`}
                                             >
                                                 {adherencePercentage}%
@@ -158,31 +163,35 @@ const ConsultationDetails = () => {
                                 </CardContent>
                             </Card>
 
-                            {/* Info Grid */}
+                            {/* Grid com informações */}
                             <div className="grid md:grid-cols-2 gap-6 mb-6">
+                                {/* Informações do Tutor */}
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
                                             <User className="h-5 w-5" />
-                                            Informações do Paciente
+                                            Informações do Tutor
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-3">
                                         <div>
                                             <p className="text-sm text-muted-foreground">Nome</p>
-                                            <p className="font-medium">{consultation.patient?.name ?? "—"}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-muted-foreground">Tutor</p>
                                             <p className="font-medium">{consultation.owner?.fullName ?? "—"}</p>
                                         </div>
                                         <div>
-                                            <p className="text-sm text-muted-foreground">Contato</p>
+                                            <p className="text-sm text-muted-foreground">Telefone</p>
                                             <p className="font-medium">{consultation.owner?.phone ?? "—"}</p>
                                         </div>
+                                        {consultation.owner?.email && (
+                                            <div>
+                                                <p className="text-sm text-muted-foreground">Email</p>
+                                                <p className="font-medium">{consultation.owner.email}</p>
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
 
+                                {/* Informações da Consulta */}
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
@@ -192,14 +201,8 @@ const ConsultationDetails = () => {
                                     </CardHeader>
                                     <CardContent className="space-y-3">
                                         <div>
-                                            <p className="text-sm text-muted-foreground">Tipo</p>
-                                            <Badge variant="outline">
-                                                {consultationTypeLabels[consultation.type]}
-                                            </Badge>
-                                        </div>
-                                        <div>
                                             <p className="text-sm text-muted-foreground">Data</p>
-                                            <p className="font-medium flex items-center gap-2">
+                                            <p className="font-medium flex items-center gap-1">
                                                 <Calendar className="h-4 w-4" />
                                                 {formatDate(consultation.date)}
                                             </p>
@@ -208,65 +211,76 @@ const ConsultationDetails = () => {
                                             <p className="text-sm text-muted-foreground">Status</p>
                                             <Badge
                                                 variant={isCompleted ? "default" : "secondary"}
+                                                className="mt-1"
                                             >
                                                 {consultationStatusLabels[consultation.status]}
                                             </Badge>
                                         </div>
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Tipo</p>
+                                            <p className="font-medium">
+                                                {consultationTypeLabels[consultation.type]}
+                                            </p>
+                                        </div>
+                                        {consultation.chiefComplaint && (
+                                            <div>
+                                                <p className="text-sm text-muted-foreground">Queixa Principal</p>
+                                                <p className="font-medium">{consultation.chiefComplaint}</p>
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
                             </div>
 
-                            {/* Chief Complaint */}
-                            {consultation.chiefComplaint && (
-                                <Card className="mb-6">
-                                    <CardHeader>
-                                        <CardTitle>Queixa Principal</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="text-muted-foreground">{consultation.chiefComplaint}</p>
-                                    </CardContent>
-                                </Card>
-                            )}
-
-                            {/* SOAP Notes */}
+                            {/* Nota SOAP */}
                             {consultation.soapNote && (
                                 <Card className="mb-6">
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
                                             <Activity className="h-5 w-5" />
-                                            Prontuário SOAP
+                                            Nota SOAP
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent className="space-y-6">
+                                    <CardContent className="space-y-4">
                                         <div>
-                                            <h3 className="font-semibold text-sm mb-2 text-primary">Subjetivo (S)</h3>
-                                            <div className="text-sm text-muted-foreground pl-4">
+                                            <p className="text-sm font-semibold text-muted-foreground mb-2">
+                                                S - Subjetivo
+                                            </p>
+                                            <div className="text-sm text-muted-foreground pl-4 whitespace-pre-line">
                                                 {consultation.soapNote.subjective ?? "Não registrado"}
                                             </div>
                                         </div>
                                         <Separator />
                                         <div>
-                                            <h3 className="font-semibold text-sm mb-2 text-primary">Objetivo (O)</h3>
+                                            <p className="text-sm font-semibold text-muted-foreground mb-2">
+                                                O - Objetivo
+                                            </p>
                                             <div className="text-sm text-muted-foreground pl-4">
                                                 {consultation.soapNote.objectiveData
-                                                    ? Object.entries(consultation.soapNote.objectiveData).map(([key, value]) => (
-                                                        <div key={key} className="mb-1">
-                                                            <span className="font-medium">{key}:</span> {value}
-                                                        </div>
-                                                    ))
+                                                    ? Object.entries(consultation.soapNote.objectiveData).map(
+                                                        ([key, value]) => (
+                                                            <p key={key}>
+                                                                <span className="font-medium">{key}:</span> {String(value)}
+                                                            </p>
+                                                        )
+                                                    )
                                                     : "Não registrado"}
                                             </div>
                                         </div>
                                         <Separator />
                                         <div>
-                                            <h3 className="font-semibold text-sm mb-2 text-primary">Avaliação (A)</h3>
-                                            <div className="text-sm text-muted-foreground pl-4">
+                                            <p className="text-sm font-semibold text-muted-foreground mb-2">
+                                                A - Avaliação
+                                            </p>
+                                            <div className="text-sm text-muted-foreground pl-4 whitespace-pre-line">
                                                 {consultation.soapNote.assessment ?? "Não registrado"}
                                             </div>
                                         </div>
                                         <Separator />
                                         <div>
-                                            <h3 className="font-semibold text-sm mb-2 text-primary">Plano (P)</h3>
+                                            <p className="text-sm font-semibold text-muted-foreground mb-2">
+                                                P - Plano
+                                            </p>
                                             <div className="text-sm text-muted-foreground pl-4 whitespace-pre-line">
                                                 {consultation.soapNote.plan ?? "Não registrado"}
                                             </div>
@@ -275,69 +289,43 @@ const ConsultationDetails = () => {
                                 </Card>
                             )}
 
-                            {/* ✅ CHECKLIST INTERATIVO - VERSÃO FINAL */}
+                            {/* ✨ SEÇÃO DE TRANSCRIÇÃO + CHECKLIST COM IA */}
                             {consultation.checklist && consultation.checklist.length > 0 && (
-                                <Card className="mb-6">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <ClipboardList className="h-5 w-5" />
-                                            Checklist do Protocolo
-                                        </CardTitle>
-                                        <CardDescription>
-                                            {completedItems} de {totalItems} itens concluídos ({adherencePercentage}%)
-                                        </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-2">
-                                            {consultation.checklist.map((item) => (
-                                                <div
-                                                    key={item.id}
-                                                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${item.completed
-                                                            ? "bg-green-50 border-green-200"
-                                                            : "bg-orange-50 border-orange-200"
-                                                        } ${updateChecklistMutation.isPending
-                                                            ? "opacity-50 cursor-wait"
-                                                            : "cursor-pointer hover:shadow-sm"
-                                                        }`}
-                                                    onClick={(e) => {
-                                                        if ((e.target as HTMLElement).closest('button')) return;
-                                                        handleChecklistToggle(item.protocolItemId, item.completed);
-                                                    }}
-                                                >
-                                                    <Checkbox
-                                                        checked={item.completed}
-                                                        onCheckedChange={() =>
-                                                            handleChecklistToggle(item.protocolItemId, item.completed)
-                                                        }
-                                                        disabled={updateChecklistMutation.isPending}
-                                                        className="flex-shrink-0"
-                                                    />
+                                <div className="mb-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="text-xl font-semibold">Checklist do Protocolo</h2>
 
-                                                    <div className="flex items-center gap-3 flex-1">
-                                                        {item.completed ? (
-                                                            <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-                                                        ) : (
-                                                            <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0" />
-                                                        )}
-                                                        <span
-                                                            className={`text-sm font-medium ${item.completed ? "text-green-900" : "text-orange-900"
-                                                                }`}
-                                                        >
-                                                            {item.protocolItem?.name ?? "Item"}
-                                                        </span>
-                                                    </div>
+                                        {!isCompleted && (
+                                            <Button
+                                                onClick={() => setShowTranscription(!showTranscription)}
+                                                variant={showTranscription ? "secondary" : "default"}
+                                                className="gap-2"
+                                            >
+                                                <Mic className="h-4 w-4" />
+                                                {showTranscription
+                                                    ? "Fechar Transcrição"
+                                                    : "Iniciar Atendimento"}
+                                            </Button>
+                                        )}
+                                    </div>
 
-                                                    {item.completedAt && (
-                                                        <span className="text-xs text-muted-foreground flex items-center gap-1 flex-shrink-0">
-                                                            <Clock className="h-3 w-3" />
-                                                            {formatTime(item.completedAt)}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            ))}
+                                    {/* Componente de Transcrição */}
+                                    {showTranscription && (
+                                        <div className="mb-6">
+                                            <TranscriptionRecorder
+                                                consultationId={id!}
+                                                onClose={() => setShowTranscription(false)}
+                                            />
                                         </div>
-                                    </CardContent>
-                                </Card>
+                                    )}
+
+                                    {/* Checklist com IA */}
+                                    <ChecklistWithAI
+                                        checklist={consultation.checklist}
+                                        onToggle={handleChecklistToggle}
+                                        isPending={toggleMutation.isPending}
+                                    />
+                                </div>
                             )}
 
                             {/* Procedimentos e Valores */}
@@ -356,7 +344,9 @@ const ConsultationDetails = () => {
                                                     <div>
                                                         <p className="text-sm font-medium">{proc.name}</p>
                                                         {proc.code && (
-                                                            <p className="text-xs text-muted-foreground">Código: {proc.code}</p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Código: {proc.code}
+                                                            </p>
                                                         )}
                                                     </div>
                                                     <p className="text-sm font-semibold text-primary">
@@ -396,7 +386,9 @@ const ConsultationDetails = () => {
                                                         <div>
                                                             <p className="text-sm font-medium">{file.fileName}</p>
                                                             {file.fileSize && (
-                                                                <p className="text-xs text-muted-foreground">{file.fileSize}</p>
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    {file.fileSize}
+                                                                </p>
                                                             )}
                                                         </div>
                                                     </div>

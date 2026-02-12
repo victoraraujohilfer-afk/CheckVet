@@ -21,6 +21,7 @@ const soap_notes_module_1 = require("./modules/soap-notes/soap-notes.module");
 const procedures_module_1 = require("./modules/procedures/procedures.module");
 const analytics_module_1 = require("./modules/analytics/analytics.module");
 const settings_module_1 = require("./modules/settings/settings.module");
+const transcription_module_1 = require("./modules/transcription/transcription.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -40,6 +41,7 @@ exports.AppModule = AppModule = __decorate([
             procedures_module_1.ProceduresModule,
             analytics_module_1.AnalyticsModule,
             settings_module_1.SettingsModule,
+            transcription_module_1.TranscriptionModule,
         ],
     })
 ], AppModule);

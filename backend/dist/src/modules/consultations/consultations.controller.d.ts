@@ -204,6 +204,9 @@ export declare class ConsultationsController {
             completed: boolean;
             completedAt: Date | null;
             notes: string | null;
+            aiTranscript: string | null;
+            aiConfidence: number | null;
+            autoChecked: boolean;
             consultationId: string;
             protocolItemId: string;
         })[];
@@ -270,6 +273,9 @@ export declare class ConsultationsController {
         completed: boolean;
         completedAt: Date | null;
         notes: string | null;
+        aiTranscript: string | null;
+        aiConfidence: number | null;
+        autoChecked: boolean;
         consultationId: string;
         protocolItemId: string;
     }>;

@@ -89,24 +89,25 @@ model ProtocolItem {
 }
 
 model Consultation {
-  id                  String                  @id @default(uuid())
-  patientId           String                  @map("patient_id")
-  ownerId             String                  @map("owner_id")
-  veterinarianId      String                  @map("veterinarian_id")
-  protocolId          String?                 @map("protocol_id")
+  id                  String                   @id @default(uuid())
+  patientId           String                   @map("patient_id")
+  ownerId             String                   @map("owner_id")
+  veterinarianId      String                   @map("veterinarian_id")
+  protocolId          String?                  @map("protocol_id")
   type                ConsultationType
-  chiefComplaint      String?                 @map("chief_complaint")
+  chiefComplaint      String?                  @map("chief_complaint")
   date                DateTime
-  status              ConsultationStatus      @default(PENDING)
-  adherencePercentage Int?                    @default(0) @map("adherence_percentage")
-  createdAt           DateTime                @default(now()) @map("created_at")
-  updatedAt           DateTime                @updatedAt @map("updated_at")
+  status              ConsultationStatus       @default(PENDING)
+  adherencePercentage Int?                     @default(0) @map("adherence_percentage")
+  createdAt           DateTime                 @default(now()) @map("created_at")
+  updatedAt           DateTime                 @updatedAt @map("updated_at")
   attachments         Attachment[]
   checklist           ConsultationChecklist[]
-  owner               Owner                   @relation(fields: [ownerId], references: [id])
-  patient             Patient                 @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  protocol            Protocol?               @relation(fields: [protocolId], references: [id])
-  veterinarian        User                    @relation(fields: [veterinarianId], references: [id])
+  transcripts         ConsultationTranscript[]
+  owner               Owner                    @relation(fields: [ownerId], references: [id])
+  patient             Patient                  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  protocol            Protocol?                @relation(fields: [protocolId], references: [id])
+  veterinarian        User                     @relation(fields: [veterinarianId], references: [id])
   procedures          Procedure[]
   soapNote            SoapNote?
 
@@ -120,11 +121,32 @@ model ConsultationChecklist {
   completed      Boolean      @default(false)
   completedAt    DateTime?    @map("completed_at")
   notes          String?
+  aiTranscript   String?      @map("ai_transcript")
+  aiConfidence   Float?       @map("ai_confidence")
+  autoChecked    Boolean      @default(false) @map("auto_checked")
   consultation   Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
   protocolItem   ProtocolItem @relation(fields: [protocolItemId], references: [id])
 
   @@unique([consultationId, protocolItemId])
   @@map("consultation_checklists")
+}
+
+model ConsultationTranscript {
+  id             String       @id @default(uuid())
+  consultationId String       @map("consultation_id")
+  transcript     String
+  audioUrl       String?      @map("audio_url")
+  duration       Int?
+  consentGiven   Boolean      @default(false) @map("consent_given")
+  startedAt      DateTime     @default(now()) @map("started_at")
+  finishedAt     DateTime?    @map("finished_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  expiresAt      DateTime     @map("expires_at")
+  consultation   Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+
+  @@index([consultationId])
+  @@index([expiresAt])
+  @@map("consultation_transcripts")
 }
 
 model SoapNote {

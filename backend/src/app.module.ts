@@ -12,6 +12,7 @@ import { SoapNotesModule } from './modules/soap-notes/soap-notes.module';
 import { ProceduresModule } from './modules/procedures/procedures.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { TranscriptionModule } from './modules/transcription/transcription.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     ProceduresModule,
     AnalyticsModule,
     SettingsModule,
+    TranscriptionModule,
   ],
 })
 export class AppModule {}

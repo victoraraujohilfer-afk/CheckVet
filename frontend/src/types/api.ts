@@ -151,6 +151,13 @@ export interface ConsultationChecklist {
   completed: boolean;
   completedAt?: string;
   notes?: string;
+
+  //  NOVOS CAMPOS:
+  aiTranscript?: string;    // Trecho da IA
+  aiConfidence?: number;    // Confiança (0-1)
+  autoChecked?: boolean;    // Marcado pela IA?
+
+
   protocolItem?: ProtocolItem;
 }
 
