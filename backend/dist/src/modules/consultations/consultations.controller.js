@@ -32,6 +32,25 @@ let ConsultationsController = class ConsultationsController {
     async findAll(query) {
         return this.consultationsService.findAll(query);
     }
+    async downloadPDF(id, res) {
+        try {
+            const pdfBuffer = await this.consultationsService.generatePDF(id);
+            res.set({
+                'Content-Type': 'application/pdf',
+                'Content-Disposition': `attachment; filename=prontuario-${id}.pdf`,
+                'Content-Length': pdfBuffer.length,
+            });
+            res.end(pdfBuffer);
+        }
+        catch (error) {
+            console.error('Error generating PDF:', error);
+            res.status(500).json({
+                statusCode: 500,
+                message: error.message || 'Erro ao gerar PDF',
+                error: error.stack,
+            });
+        }
+    }
     async findOne(id) {
         return this.consultationsService.findOne(id);
     }
@@ -63,6 +82,15 @@ __decorate([
     __metadata("design:paramtypes", [query_consultation_dto_1.QueryConsultationDto]),
     __metadata("design:returntype", Promise)
 ], ConsultationsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)(':id/pdf'),
+    (0, swagger_1.ApiOperation)({ summary: 'Baixar prontuário em PDF' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], ConsultationsController.prototype, "downloadPDF", null);
 __decorate([
     (0, common_1.Get)(':id'),
     (0, swagger_1.ApiOperation)({ summary: 'Obter detalhes completos da consulta' }),

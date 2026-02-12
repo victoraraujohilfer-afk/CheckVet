@@ -42,4 +42,20 @@ export const consultationsService = {
 
   remove: (id: string) =>
     api.delete(`/consultations/${id}`).then((r) => r.data.data),
+
+  downloadPDF: async (id: string, patientName: string) => {
+    const response = await api.get(`/consultations/${id}/pdf`, {
+      responseType: 'blob',
+    });
+
+    // Criar um link temporário para download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `prontuario-${patientName.replace(/\s+/g, '-')}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };

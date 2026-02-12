@@ -55,6 +55,7 @@ export class AuthService {
         role: user.role,
         crmv: user.crmv,
         clinicName: user.clinicName,
+        mustChangePassword: user.mustChangePassword,
       },
     };
   }
@@ -93,6 +94,43 @@ export class AuthService {
       where: { id: userId },
       data: { refreshToken: null },
     });
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Usuário não encontrado');
+    }
+
+    // Se mustChangePassword é true, não precisa validar senha atual
+    if (!user.mustChangePassword) {
+      const passwordValid = await bcrypt.compare(
+        currentPassword,
+        user.passwordHash,
+      );
+      if (!passwordValid) {
+        throw new UnauthorizedException('Senha atual incorreta');
+      }
+    }
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 12);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash: newPasswordHash,
+        mustChangePassword: false,
+      },
+    });
+
+    return { message: 'Senha alterada com sucesso' };
   }
 
   private async generateTokens(userId: string, email: string, role: string) {

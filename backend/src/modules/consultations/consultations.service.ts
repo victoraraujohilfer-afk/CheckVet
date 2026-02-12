@@ -5,10 +5,14 @@ import { UpdateConsultationDto } from './dto/update-consultation.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
 import { QueryConsultationDto } from './dto/query-consultation.dto';
 import { Prisma } from '@prisma/client';
+import { PDFService } from './pdf.service';
 
 @Injectable()
 export class ConsultationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private pdfService: PDFService,
+  ) {}
 
   async create(dto: CreateConsultationDto, veterinarianId: string) {
     const consultation = await this.prisma.consultation.create({
@@ -94,7 +98,16 @@ export class ConsultationsService {
       include: {
         patient: { include: { owner: true } },
         owner: true,
-        veterinarian: { select: { id: true, fullName: true, crmv: true, specialization: true } },
+        veterinarian: {
+          select: {
+            id: true,
+            fullName: true,
+            crmv: true,
+            specialization: true,
+            clinicName: true,
+            clinicLogoUrl: true,
+          },
+        },
         protocol: { include: { items: { orderBy: { order: 'asc' } } } },
         checklist: {
           include: { protocolItem: true },
@@ -144,6 +157,75 @@ export class ConsultationsService {
   async remove(id: string) {
     await this.findOne(id);
     return this.prisma.consultation.delete({ where: { id } });
+  }
+
+  async generatePDF(id: string): Promise<Buffer> {
+    const consultation = await this.findOne(id);
+
+    // Formatar dados para o PDF
+    const pdfData = {
+      id: consultation.id,
+      patient: {
+        name: consultation.patient.name,
+        species: consultation.patient.species,
+        breed: consultation.patient.breed,
+        gender: consultation.patient.gender,
+        age: consultation.patient.age,
+        weight: consultation.patient.weight
+          ? parseFloat(consultation.patient.weight.toString())
+          : null,
+      },
+      owner: {
+        fullName: consultation.owner.fullName,
+        phone: consultation.owner.phone,
+        email: consultation.owner.email,
+        address: consultation.owner.address,
+      },
+      veterinarian: {
+        fullName: consultation.veterinarian.fullName,
+        crmv: consultation.veterinarian.crmv,
+        specialization: consultation.veterinarian.specialization,
+        clinicName: consultation.veterinarian.clinicName || 'CheckVet Hospital',
+        clinicLogoUrl: consultation.veterinarian.clinicLogoUrl,
+      },
+      type: consultation.type,
+      status: consultation.status,
+      date: consultation.date,
+      chiefComplaint: consultation.chiefComplaint,
+      adherencePercentage: consultation.adherencePercentage,
+      protocol: consultation.protocol
+        ? {
+            name: consultation.protocol.name,
+            description: consultation.protocol.description,
+          }
+        : null,
+      checklist: consultation.checklist
+        ? consultation.checklist.map((item) => ({
+            id: item.id,
+            name: item.protocolItem.name,
+            completed: item.completed,
+            completedAt: item.completedAt,
+            notes: item.notes,
+          }))
+        : [],
+      soapNote: consultation.soapNote
+        ? {
+            subjective: consultation.soapNote.subjective,
+            objectiveData: consultation.soapNote.objectiveData,
+            assessment: consultation.soapNote.assessment,
+            plan: consultation.soapNote.plan,
+          }
+        : null,
+      procedures: consultation.procedures
+        ? consultation.procedures.map((proc) => ({
+            name: proc.name,
+            code: proc.code,
+            value: proc.value ? parseFloat(proc.value.toString()) : null,
+          }))
+        : [],
+    };
+
+    return await this.pdfService.generateConsultationPDF(pdfData);
   }
 
   private async recalculateAdherence(consultationId: string) {

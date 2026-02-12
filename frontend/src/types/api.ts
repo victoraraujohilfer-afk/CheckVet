@@ -1,8 +1,6 @@
 export enum Role {
   ADMIN = 'ADMIN',
   VETERINARIAN = 'VETERINARIAN',
-  SUPERVISOR = 'SUPERVISOR',
-  COORDINATOR = 'COORDINATOR',
 }
 
 export enum UserStatus {
@@ -206,7 +204,9 @@ export interface SystemSettings {
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
-  user: Pick<User, 'id' | 'email' | 'fullName' | 'role' | 'crmv' | 'clinicName'>;
+  user: Pick<User, 'id' | 'email' | 'fullName' | 'role' | 'crmv' | 'clinicName'> & {
+    mustChangePassword?: boolean;
+  };
 }
 
 export interface PaginatedResponse<T> {

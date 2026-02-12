@@ -14,6 +14,7 @@ export declare class AuthController {
             role: import(".prisma/client").$Enums.Role;
             crmv: string | null;
             clinicName: string | null;
+            mustChangePassword: boolean;
         };
     }>;
     refresh(dto: RefreshTokenDto, userId: string): Promise<{
@@ -21,6 +22,12 @@ export declare class AuthController {
         refreshToken: string;
     }>;
     logout(userId: string): Promise<{
+        message: string;
+    }>;
+    changePassword(userId: string, dto: {
+        currentPassword?: string;
+        newPassword: string;
+    }): Promise<{
         message: string;
     }>;
 }

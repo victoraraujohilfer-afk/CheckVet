@@ -14,7 +14,7 @@ import { Prisma } from '@prisma/client';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateUserDto) {
+  async create(dto: CreateUserDto, adminId?: string) {
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -23,6 +23,34 @@ export class UsersService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
+
+    // Se um admin está criando, busca os dados do admin
+    let clinicName = dto.clinicName;
+    let clinicLogoUrl: string | undefined = undefined;
+
+    if (adminId) {
+      const admin = await this.prisma.user.findUnique({
+        where: { id: adminId },
+        select: { clinicName: true, clinicLogoUrl: true, role: true },
+      });
+
+      // Valida que admin só pode criar veterinários
+      if (admin?.role === 'ADMIN' && dto.role !== 'VETERINARIAN') {
+        throw new ConflictException(
+          'Administradores só podem criar usuários com função de Veterinário',
+        );
+      }
+
+      // Se o admin tem uma clínica associada, usa ela para o novo usuário
+      if (admin?.clinicName) {
+        clinicName = admin.clinicName;
+      }
+
+      // Herda a logo da clínica do admin
+      if (admin?.clinicLogoUrl) {
+        clinicLogoUrl = admin.clinicLogoUrl;
+      }
+    }
 
     const user = await this.prisma.user.create({
       data: {
@@ -33,7 +61,9 @@ export class UsersService {
         role: dto.role,
         crmv: dto.crmv,
         specialization: dto.specialization,
-        clinicName: dto.clinicName,
+        clinicName: clinicName,
+        clinicLogoUrl: clinicLogoUrl,
+        mustChangePassword: dto.role === 'VETERINARIAN', // Veterinários devem trocar senha no primeiro login
       },
       select: {
         id: true,
@@ -52,11 +82,24 @@ export class UsersService {
     return user;
   }
 
-  async findAll(query: QueryUserDto) {
+  async findAll(query: QueryUserDto, currentUserId?: string) {
     const { search, role, status, page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
     const where: Prisma.UserWhereInput = {};
+
+    // Se um usuário está fazendo a requisição, verifica se é admin
+    if (currentUserId) {
+      const currentUser = await this.prisma.user.findUnique({
+        where: { id: currentUserId },
+        select: { role: true, clinicName: true },
+      });
+
+      // Admin só vê usuários da mesma clínica
+      if (currentUser?.role === 'ADMIN' && currentUser.clinicName) {
+        where.clinicName = currentUser.clinicName;
+      }
+    }
 
     if (search) {
       where.OR = [

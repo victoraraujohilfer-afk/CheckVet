@@ -8,11 +8,12 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Role } from "@/types/api";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import ChangePassword from "./pages/ChangePassword";
 import VetDashboard from "./pages/vet/Dashboard";
 import VetHistory from "./pages/vet/History";
 import VetConsultationNew from "./pages/vet/ConsultationNew";
 import VetConsultationDetails from "./pages/vet/ConsultationDetails";
-import VetProtocols from "./pages/vet/Protocols";  
+import VetProtocols from "./pages/vet/Protocols";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminVeterinarians from "./pages/admin/Veterinarians";
 import AdminVeterinarianNew from "./pages/admin/VeterinarianNew";
@@ -30,8 +31,8 @@ const queryClient = new QueryClient({
   },
 });
 
-const vetRoles = [Role.VETERINARIAN, Role.SUPERVISOR, Role.COORDINATOR, Role.ADMIN];
-const adminRoles = [Role.ADMIN, Role.SUPERVISOR];
+const vetRoles = [Role.VETERINARIAN, Role.ADMIN];
+const adminRoles = [Role.ADMIN];
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -44,6 +45,9 @@ const App = () => (
             {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/change-password" element={
+              <ProtectedRoute allowedRoles={vetRoles}><ChangePassword /></ProtectedRoute>
+            } />
 
             {/* Veterinarian routes */}
             <Route path="/vet/dashboard" element={

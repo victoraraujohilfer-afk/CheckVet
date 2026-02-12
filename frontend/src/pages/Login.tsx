@@ -21,7 +21,10 @@ const Login = () => {
     // Redirect when user becomes available after successful login
     useEffect(() => {
         if (isAuthenticated && user) {
-            if (user.role === Role.ADMIN || user.role === Role.SUPERVISOR) {
+            // Se deve trocar a senha, redireciona para a página de troca de senha
+            if (user.mustChangePassword) {
+                navigate("/change-password", { replace: true });
+            } else if (user.role === Role.ADMIN) {
                 navigate("/admin/dashboard", { replace: true });
             } else {
                 navigate("/vet/dashboard", { replace: true });

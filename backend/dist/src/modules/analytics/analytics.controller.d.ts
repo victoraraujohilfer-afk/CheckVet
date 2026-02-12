@@ -2,7 +2,7 @@ import { AnalyticsService } from './analytics.service';
 export declare class AnalyticsController {
     private readonly analyticsService;
     constructor(analyticsService: AnalyticsService);
-    getDashboard(): Promise<{
+    getDashboard(userId: string): Promise<{
         totalVeterinarians: number;
         activeVeterinarians: number;
         consultationsToday: number;
@@ -10,7 +10,7 @@ export declare class AnalyticsController {
         averageAdherence: number;
         pendingAlerts: number;
     }>;
-    getVeterinariansRanking(limit?: number): Promise<{
+    getVeterinariansRanking(limit?: number, userId?: string): Promise<{
         id: string;
         fullName: string;
         crmv: string | null;
@@ -21,7 +21,7 @@ export declare class AnalyticsController {
         lastConsultation: Date | null;
         lastLogin: Date | null;
     }[]>;
-    getProtocolAdherence(): Promise<{
+    getProtocolAdherence(userId: string): Promise<{
         id: string;
         name: string;
         type: import(".prisma/client").$Enums.ProtocolType;

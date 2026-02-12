@@ -12,9 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConsultationsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
+const pdf_service_1 = require("./pdf.service");
 let ConsultationsService = class ConsultationsService {
-    constructor(prisma) {
+    constructor(prisma, pdfService) {
         this.prisma = prisma;
+        this.pdfService = pdfService;
     }
     async create(dto, veterinarianId) {
         const consultation = await this.prisma.consultation.create({
@@ -94,7 +96,16 @@ let ConsultationsService = class ConsultationsService {
             include: {
                 patient: { include: { owner: true } },
                 owner: true,
-                veterinarian: { select: { id: true, fullName: true, crmv: true, specialization: true } },
+                veterinarian: {
+                    select: {
+                        id: true,
+                        fullName: true,
+                        crmv: true,
+                        specialization: true,
+                        clinicName: true,
+                        clinicLogoUrl: true,
+                    },
+                },
                 protocol: { include: { items: { orderBy: { order: 'asc' } } } },
                 checklist: {
                     include: { protocolItem: true },
@@ -138,6 +149,71 @@ let ConsultationsService = class ConsultationsService {
         await this.findOne(id);
         return this.prisma.consultation.delete({ where: { id } });
     }
+    async generatePDF(id) {
+        const consultation = await this.findOne(id);
+        const pdfData = {
+            id: consultation.id,
+            patient: {
+                name: consultation.patient.name,
+                species: consultation.patient.species,
+                breed: consultation.patient.breed,
+                gender: consultation.patient.gender,
+                age: consultation.patient.age,
+                weight: consultation.patient.weight
+                    ? parseFloat(consultation.patient.weight.toString())
+                    : null,
+            },
+            owner: {
+                fullName: consultation.owner.fullName,
+                phone: consultation.owner.phone,
+                email: consultation.owner.email,
+                address: consultation.owner.address,
+            },
+            veterinarian: {
+                fullName: consultation.veterinarian.fullName,
+                crmv: consultation.veterinarian.crmv,
+                specialization: consultation.veterinarian.specialization,
+                clinicName: consultation.veterinarian.clinicName || 'CheckVet Hospital',
+                clinicLogoUrl: consultation.veterinarian.clinicLogoUrl,
+            },
+            type: consultation.type,
+            status: consultation.status,
+            date: consultation.date,
+            chiefComplaint: consultation.chiefComplaint,
+            adherencePercentage: consultation.adherencePercentage,
+            protocol: consultation.protocol
+                ? {
+                    name: consultation.protocol.name,
+                    description: consultation.protocol.description,
+                }
+                : null,
+            checklist: consultation.checklist
+                ? consultation.checklist.map((item) => ({
+                    id: item.id,
+                    name: item.protocolItem.name,
+                    completed: item.completed,
+                    completedAt: item.completedAt,
+                    notes: item.notes,
+                }))
+                : [],
+            soapNote: consultation.soapNote
+                ? {
+                    subjective: consultation.soapNote.subjective,
+                    objectiveData: consultation.soapNote.objectiveData,
+                    assessment: consultation.soapNote.assessment,
+                    plan: consultation.soapNote.plan,
+                }
+                : null,
+            procedures: consultation.procedures
+                ? consultation.procedures.map((proc) => ({
+                    name: proc.name,
+                    code: proc.code,
+                    value: proc.value ? parseFloat(proc.value.toString()) : null,
+                }))
+                : [],
+        };
+        return await this.pdfService.generateConsultationPDF(pdfData);
+    }
     async recalculateAdherence(consultationId) {
         const items = await this.prisma.consultationChecklist.findMany({
             where: { consultationId },
@@ -155,6 +231,7 @@ let ConsultationsService = class ConsultationsService {
 exports.ConsultationsService = ConsultationsService;
 exports.ConsultationsService = ConsultationsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        pdf_service_1.PDFService])
 ], ConsultationsService);
 //# sourceMappingURL=consultations.service.js.map

@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(node update-roles.js:*)",
+      "Bash(del:*)"
     ]
   }
 }

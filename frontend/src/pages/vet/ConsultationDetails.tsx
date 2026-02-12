@@ -28,6 +28,8 @@ import { formatDate, formatTime, formatDateTime, formatCurrency, getInitials } f
 import { ConsultationStatus } from "@/types/api";
 import TranscriptionRecorder from "@/components/transcription/TranscriptionRecorder";
 import ChecklistWithAI from "@/components/transcription/ChecklistWithAI";
+import { consultationsService } from "@/services/consultations.service";
+import { toast } from "sonner";
 
 const ConsultationDetails = () => {
     const navigate = useNavigate();
@@ -36,6 +38,7 @@ const ConsultationDetails = () => {
 
     // Estado para controlar transcrição
     const [showTranscription, setShowTranscription] = useState(false);
+    const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
 
     const { data: consultation, isLoading } = useConsultation(id ?? "");
     const toggleMutation = useUpdateChecklist();
@@ -63,6 +66,21 @@ const ConsultationDetails = () => {
                 completed: !currentState,
             },
         });
+    };
+
+    const handleDownloadPDF = async () => {
+        if (!id || !consultation) return;
+
+        setIsDownloadingPDF(true);
+        try {
+            await consultationsService.downloadPDF(id, consultation.patient?.name ?? "paciente");
+            toast.success("PDF baixado com sucesso!");
+        } catch (error) {
+            console.error("Erro ao baixar PDF:", error);
+            toast.error("Erro ao baixar o PDF. Tente novamente.");
+        } finally {
+            setIsDownloadingPDF(false);
+        }
     };
 
     return (
@@ -98,9 +116,13 @@ const ConsultationDetails = () => {
                                     <Edit className="h-4 w-4 mr-2" />
                                     Editar
                                 </Button>
-                                <Button>
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Baixar PDF
+                                <Button onClick={handleDownloadPDF} disabled={isDownloadingPDF}>
+                                    {isDownloadingPDF ? (
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    ) : (
+                                        <Download className="h-4 w-4 mr-2" />
+                                    )}
+                                    {isDownloadingPDF ? "Gerando PDF..." : "Baixar PDF"}
                                 </Button>
                             </div>
                         </div>

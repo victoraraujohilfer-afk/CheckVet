@@ -17,7 +17,7 @@ let UsersService = class UsersService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(dto) {
+    async create(dto, adminId) {
         const existing = await this.prisma.user.findUnique({
             where: { email: dto.email },
         });
@@ -25,6 +25,23 @@ let UsersService = class UsersService {
             throw new common_1.ConflictException('Email já cadastrado');
         }
         const passwordHash = await bcrypt.hash(dto.password, 12);
+        let clinicName = dto.clinicName;
+        let clinicLogoUrl = undefined;
+        if (adminId) {
+            const admin = await this.prisma.user.findUnique({
+                where: { id: adminId },
+                select: { clinicName: true, clinicLogoUrl: true, role: true },
+            });
+            if (admin?.role === 'ADMIN' && dto.role !== 'VETERINARIAN') {
+                throw new common_1.ConflictException('Administradores só podem criar usuários com função de Veterinário');
+            }
+            if (admin?.clinicName) {
+                clinicName = admin.clinicName;
+            }
+            if (admin?.clinicLogoUrl) {
+                clinicLogoUrl = admin.clinicLogoUrl;
+            }
+        }
         const user = await this.prisma.user.create({
             data: {
                 email: dto.email,
@@ -34,7 +51,9 @@ let UsersService = class UsersService {
                 role: dto.role,
                 crmv: dto.crmv,
                 specialization: dto.specialization,
-                clinicName: dto.clinicName,
+                clinicName: clinicName,
+                clinicLogoUrl: clinicLogoUrl,
+                mustChangePassword: dto.role === 'VETERINARIAN',
             },
             select: {
                 id: true,
@@ -51,10 +70,19 @@ let UsersService = class UsersService {
         });
         return user;
     }
-    async findAll(query) {
+    async findAll(query, currentUserId) {
         const { search, role, status, page = 1, limit = 10 } = query;
         const skip = (page - 1) * limit;
         const where = {};
+        if (currentUserId) {
+            const currentUser = await this.prisma.user.findUnique({
+                where: { id: currentUserId },
+                select: { role: true, clinicName: true },
+            });
+            if (currentUser?.role === 'ADMIN' && currentUser.clinicName) {
+                where.clinicName = currentUser.clinicName;
+            }
+        }
         if (search) {
             where.OR = [
                 { fullName: { contains: search, mode: 'insensitive' } },

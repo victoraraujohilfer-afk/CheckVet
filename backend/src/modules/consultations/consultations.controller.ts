@@ -8,8 +8,11 @@ import {
   Param,
   Query,
   UseGuards,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { Response } from 'express';
 import { ConsultationsService } from './consultations.service';
 import { CreateConsultationDto } from './dto/create-consultation.dto';
 import { UpdateConsultationDto } from './dto/update-consultation.dto';
@@ -38,6 +41,29 @@ export class ConsultationsController {
   @ApiOperation({ summary: 'Listar consultas com filtros' })
   async findAll(@Query() query: QueryConsultationDto) {
     return this.consultationsService.findAll(query);
+  }
+
+  @Get(':id/pdf')
+  @ApiOperation({ summary: 'Baixar prontuário em PDF' })
+  async downloadPDF(@Param('id') id: string, @Res() res: Response) {
+    try {
+      const pdfBuffer = await this.consultationsService.generatePDF(id);
+
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=prontuario-${id}.pdf`,
+        'Content-Length': pdfBuffer.length,
+      });
+
+      res.end(pdfBuffer);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      res.status(500).json({
+        statusCode: 500,
+        message: error.message || 'Erro ao gerar PDF',
+        error: error.stack,
+      });
+    }
   }
 
   @Get(':id')

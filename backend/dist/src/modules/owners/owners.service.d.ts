@@ -5,8 +5,8 @@ export declare class OwnersService {
     private prisma;
     constructor(prisma: PrismaService);
     create(dto: CreateOwnerDto): Promise<{
-        email: string | null;
         id: string;
+        email: string | null;
         fullName: string;
         phone: string;
         createdAt: Date;
@@ -31,8 +31,8 @@ export declare class OwnersService {
                 weight: import("@prisma/client/runtime/library").Decimal | null;
             }[];
         } & {
-            email: string | null;
             id: string;
+            email: string | null;
             fullName: string;
             phone: string;
             createdAt: Date;
@@ -57,8 +57,8 @@ export declare class OwnersService {
             weight: import("@prisma/client/runtime/library").Decimal | null;
         }[];
     } & {
-        email: string | null;
         id: string;
+        email: string | null;
         fullName: string;
         phone: string;
         createdAt: Date;
@@ -66,8 +66,8 @@ export declare class OwnersService {
         address: string | null;
     }>;
     update(id: string, dto: UpdateOwnerDto): Promise<{
-        email: string | null;
         id: string;
+        email: string | null;
         fullName: string;
         phone: string;
         createdAt: Date;
@@ -75,8 +75,8 @@ export declare class OwnersService {
         address: string | null;
     }>;
     remove(id: string): Promise<{
-        email: string | null;
         id: string;
+        email: string | null;
         fullName: string;
         phone: string;
         createdAt: Date;

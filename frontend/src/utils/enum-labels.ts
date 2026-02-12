@@ -40,8 +40,6 @@ export const genderLabels: Record<Gender, string> = {
 export const roleLabels: Record<Role, string> = {
   [Role.ADMIN]: 'Administrador',
   [Role.VETERINARIAN]: 'Veterinário',
-  [Role.SUPERVISOR]: 'Supervisor',
-  [Role.COORDINATOR]: 'Coordenador',
 };
 
 export const specializationLabels: Record<Specialization, string> = {

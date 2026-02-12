@@ -5,11 +5,33 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class AnalyticsService {
   constructor(private prisma: PrismaService) {}
 
-  async getDashboard() {
+  async getDashboard(currentUserId?: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Buscar dados do usuário atual para filtrar por clínica
+    let clinicName: string | null = null;
+    if (currentUserId) {
+      const currentUser = await this.prisma.user.findUnique({
+        where: { id: currentUserId },
+        select: { role: true, clinicName: true },
+      });
+
+      // Admin só vê dados da mesma clínica
+      if (currentUser?.role === 'ADMIN' && currentUser.clinicName) {
+        clinicName = currentUser.clinicName;
+      }
+    }
+
+    const vetWhere = clinicName
+      ? { role: 'VETERINARIAN' as const, clinicName }
+      : { role: 'VETERINARIAN' as const };
+
+    const consultationWhere = clinicName
+      ? { veterinarian: { clinicName } }
+      : {};
 
     const [
       totalVets,
@@ -18,15 +40,17 @@ export class AnalyticsService {
       totalConsultations,
       avgAdherence,
     ] = await Promise.all([
-      this.prisma.user.count({ where: { role: 'VETERINARIAN' } }),
-      this.prisma.user.count({ where: { role: 'VETERINARIAN', status: 'ACTIVE' } }),
-      this.prisma.consultation.count({
-        where: { date: { gte: today, lt: tomorrow } },
+      this.prisma.user.count({ where: vetWhere }),
+      this.prisma.user.count({
+        where: { ...vetWhere, status: 'ACTIVE' },
       }),
-      this.prisma.consultation.count(),
+      this.prisma.consultation.count({
+        where: { date: { gte: today, lt: tomorrow }, ...consultationWhere },
+      }),
+      this.prisma.consultation.count({ where: consultationWhere }),
       this.prisma.consultation.aggregate({
         _avg: { adherencePercentage: true },
-        where: { adherencePercentage: { not: null } },
+        where: { adherencePercentage: { not: null }, ...consultationWhere },
       }),
     ]);
 
@@ -34,6 +58,7 @@ export class AnalyticsService {
       where: {
         status: 'COMPLETED',
         adherencePercentage: { lt: 80 },
+        ...consultationWhere,
       },
     });
 
@@ -47,9 +72,27 @@ export class AnalyticsService {
     };
   }
 
-  async getVeterinariansRanking(limit = 10) {
+  async getVeterinariansRanking(limit = 10, currentUserId?: string) {
+    // Buscar dados do usuário atual para filtrar por clínica
+    let clinicName: string | null = null;
+    if (currentUserId) {
+      const currentUser = await this.prisma.user.findUnique({
+        where: { id: currentUserId },
+        select: { role: true, clinicName: true },
+      });
+
+      // Admin só vê veterinários da mesma clínica
+      if (currentUser?.role === 'ADMIN' && currentUser.clinicName) {
+        clinicName = currentUser.clinicName;
+      }
+    }
+
+    const where = clinicName
+      ? { role: 'VETERINARIAN' as const, status: 'ACTIVE' as const, clinicName }
+      : { role: 'VETERINARIAN' as const, status: 'ACTIVE' as const };
+
     const vets = await this.prisma.user.findMany({
-      where: { role: 'VETERINARIAN', status: 'ACTIVE' },
+      where,
       select: {
         id: true,
         fullName: true,
@@ -94,17 +137,44 @@ export class AnalyticsService {
     });
   }
 
-  async getProtocolAdherence() {
+  async getProtocolAdherence(currentUserId?: string) {
+    // Buscar dados do usuário atual para filtrar por clínica
+    let clinicName: string | null = null;
+    if (currentUserId) {
+      const currentUser = await this.prisma.user.findUnique({
+        where: { id: currentUserId },
+        select: { role: true, clinicName: true },
+      });
+
+      // Admin só vê dados da mesma clínica
+      if (currentUser?.role === 'ADMIN' && currentUser.clinicName) {
+        clinicName = currentUser.clinicName;
+      }
+    }
+
     const protocols = await this.prisma.protocol.findMany({
       where: { isActive: true },
       select: {
         id: true,
         name: true,
         type: true,
-        consultations: {
-          select: { adherencePercentage: true },
-        },
-        _count: { select: { consultations: true } },
+        consultations: clinicName
+          ? {
+              select: { adherencePercentage: true },
+              where: { veterinarian: { clinicName } },
+            }
+          : {
+              select: { adherencePercentage: true },
+            },
+        _count: clinicName
+          ? {
+              select: {
+                consultations: {
+                  where: { veterinarian: { clinicName } },
+                },
+              },
+            }
+          : { select: { consultations: true } },
       },
     });
 

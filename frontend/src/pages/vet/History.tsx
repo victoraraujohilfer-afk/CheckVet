@@ -32,6 +32,8 @@ import {
 } from "@/utils/enum-labels";
 import { formatDate, formatTime, getInitials } from "@/utils/format";
 import { ConsultationType, ConsultationStatus } from "@/types/api";
+import { consultationsService } from "@/services/consultations.service";
+import { toast } from "sonner";
 
 const VetHistory = () => {
     const navigate = useNavigate();
@@ -39,6 +41,7 @@ const VetHistory = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterType, setFilterType] = useState("all");
     const [filterStatus, setFilterStatus] = useState("all");
+    const [downloadingPDFId, setDownloadingPDFId] = useState<string | null>(null);
 
     const { data, isLoading } = useConsultations({
         veterinarianId: user?.id,
@@ -51,6 +54,19 @@ const VetHistory = () => {
 
     const isCompleted = (status: string) =>
         status === ConsultationStatus.COMPLETED;
+
+    const handleDownloadPDF = async (consultationId: string, patientName: string) => {
+        setDownloadingPDFId(consultationId);
+        try {
+            await consultationsService.downloadPDF(consultationId, patientName);
+            toast.success("PDF baixado com sucesso!");
+        } catch (error) {
+            console.error("Erro ao baixar PDF:", error);
+            toast.error("Erro ao baixar o PDF. Tente novamente.");
+        } finally {
+            setDownloadingPDFId(null);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-muted/30">
@@ -255,8 +271,17 @@ const VetHistory = () => {
                                                             <Eye className="h-4 w-4 mr-2" />
                                                             Ver Detalhes
                                                         </Button>
-                                                        <Button size="sm" variant="ghost">
-                                                            <Download className="h-4 w-4 mr-2" />
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => handleDownloadPDF(consultation.id, consultation.patient?.name ?? "paciente")}
+                                                            disabled={downloadingPDFId === consultation.id}
+                                                        >
+                                                            {downloadingPDFId === consultation.id ? (
+                                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                            ) : (
+                                                                <Download className="h-4 w-4 mr-2" />
+                                                            )}
                                                             Baixar Prontuário
                                                         </Button>
                                                     </div>

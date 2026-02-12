@@ -53,6 +53,7 @@ let AuthService = class AuthService {
                 role: user.role,
                 crmv: user.crmv,
                 clinicName: user.clinicName,
+                mustChangePassword: user.mustChangePassword,
             },
         };
     }
@@ -81,6 +82,29 @@ let AuthService = class AuthService {
             where: { id: userId },
             data: { refreshToken: null },
         });
+    }
+    async changePassword(userId, currentPassword, newPassword) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
+        if (!user) {
+            throw new common_1.UnauthorizedException('Usuário não encontrado');
+        }
+        if (!user.mustChangePassword) {
+            const passwordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+            if (!passwordValid) {
+                throw new common_1.UnauthorizedException('Senha atual incorreta');
+            }
+        }
+        const newPasswordHash = await bcrypt.hash(newPassword, 12);
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                passwordHash: newPasswordHash,
+                mustChangePassword: false,
+            },
+        });
+        return { message: 'Senha alterada com sucesso' };
     }
     async generateTokens(userId, email, role) {
         const payload = { sub: userId, email, role };

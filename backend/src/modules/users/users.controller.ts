@@ -34,14 +34,17 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(Role.ADMIN, Role.SUPERVISOR)
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Listar usuários (admin)' })
-  async findAll(@Query() query: QueryUserDto) {
-    return this.usersService.findAll(query);
+  async findAll(
+    @Query() query: QueryUserDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.usersService.findAll(query, userId);
   }
 
   @Get(':id')
-  @Roles(Role.ADMIN, Role.SUPERVISOR)
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Obter detalhes de um usuário' })
   async findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
@@ -50,8 +53,11 @@ export class UsersController {
   @Post()
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Criar novo usuário' })
-  async create(@Body() dto: CreateUserDto) {
-    return this.usersService.create(dto);
+  async create(
+    @Body() dto: CreateUserDto,
+    @CurrentUser('id') adminId: string,
+  ) {
+    return this.usersService.create(dto, adminId);
   }
 
   @Patch(':id')

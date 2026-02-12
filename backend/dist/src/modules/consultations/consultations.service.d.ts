@@ -4,13 +4,15 @@ import { UpdateConsultationDto } from './dto/update-consultation.dto';
 import { UpdateChecklistDto } from './dto/update-checklist.dto';
 import { QueryConsultationDto } from './dto/query-consultation.dto';
 import { Prisma } from '@prisma/client';
+import { PDFService } from './pdf.service';
 export declare class ConsultationsService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private pdfService;
+    constructor(prisma: PrismaService, pdfService: PDFService);
     create(dto: CreateConsultationDto, veterinarianId: string): Promise<{
         owner: {
-            email: string | null;
             id: string;
+            email: string | null;
             fullName: string;
             phone: string;
             createdAt: Date;
@@ -38,12 +40,12 @@ export declare class ConsultationsService {
                 protocolId: string;
             }[];
         } & {
-            type: import(".prisma/client").$Enums.ProtocolType;
-            description: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
+            type: import(".prisma/client").$Enums.ProtocolType;
             isActive: boolean;
             veterinarianId: string | null;
         }) | null;
@@ -53,11 +55,11 @@ export declare class ConsultationsService {
             crmv: string | null;
         };
     } & {
-        type: import(".prisma/client").$Enums.ConsultationType;
         id: string;
         status: import(".prisma/client").$Enums.ConsultationStatus;
         createdAt: Date;
         updatedAt: Date;
+        type: import(".prisma/client").$Enums.ConsultationType;
         ownerId: string;
         date: Date;
         veterinarianId: string;
@@ -69,8 +71,8 @@ export declare class ConsultationsService {
     findAll(query: QueryConsultationDto): Promise<{
         consultations: ({
             owner: {
-                email: string | null;
                 id: string;
+                email: string | null;
                 fullName: string;
                 phone: string;
                 createdAt: Date;
@@ -90,9 +92,9 @@ export declare class ConsultationsService {
                 weight: Prisma.Decimal | null;
             };
             protocol: {
-                type: import(".prisma/client").$Enums.ProtocolType;
                 id: string;
                 name: string;
+                type: import(".prisma/client").$Enums.ProtocolType;
             } | null;
             veterinarian: {
                 id: string;
@@ -100,11 +102,11 @@ export declare class ConsultationsService {
                 crmv: string | null;
             };
         } & {
-            type: import(".prisma/client").$Enums.ConsultationType;
             id: string;
             status: import(".prisma/client").$Enums.ConsultationStatus;
             createdAt: Date;
             updatedAt: Date;
+            type: import(".prisma/client").$Enums.ConsultationType;
             ownerId: string;
             date: Date;
             veterinarianId: string;
@@ -119,8 +121,8 @@ export declare class ConsultationsService {
     }>;
     findOne(id: string): Promise<{
         owner: {
-            email: string | null;
             id: string;
+            email: string | null;
             fullName: string;
             phone: string;
             createdAt: Date;
@@ -129,8 +131,8 @@ export declare class ConsultationsService {
         };
         patient: {
             owner: {
-                email: string | null;
                 id: string;
+                email: string | null;
                 fullName: string;
                 phone: string;
                 createdAt: Date;
@@ -158,12 +160,12 @@ export declare class ConsultationsService {
                 protocolId: string;
             }[];
         } & {
-            type: import(".prisma/client").$Enums.ProtocolType;
-            description: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
             name: string;
+            description: string | null;
+            type: import(".prisma/client").$Enums.ProtocolType;
             isActive: boolean;
             veterinarianId: string | null;
         }) | null;
@@ -182,6 +184,8 @@ export declare class ConsultationsService {
             fullName: string;
             crmv: string | null;
             specialization: import(".prisma/client").$Enums.Specialization | null;
+            clinicName: string | null;
+            clinicLogoUrl: string | null;
         };
         attachments: {
             id: string;
@@ -220,11 +224,11 @@ export declare class ConsultationsService {
             value: Prisma.Decimal | null;
         }[];
     } & {
-        type: import(".prisma/client").$Enums.ConsultationType;
         id: string;
         status: import(".prisma/client").$Enums.ConsultationStatus;
         createdAt: Date;
         updatedAt: Date;
+        type: import(".prisma/client").$Enums.ConsultationType;
         ownerId: string;
         date: Date;
         veterinarianId: string;
@@ -235,8 +239,8 @@ export declare class ConsultationsService {
     }>;
     update(id: string, dto: UpdateConsultationDto): Promise<{
         owner: {
-            email: string | null;
             id: string;
+            email: string | null;
             fullName: string;
             phone: string;
             createdAt: Date;
@@ -256,11 +260,11 @@ export declare class ConsultationsService {
             weight: Prisma.Decimal | null;
         };
     } & {
-        type: import(".prisma/client").$Enums.ConsultationType;
         id: string;
         status: import(".prisma/client").$Enums.ConsultationStatus;
         createdAt: Date;
         updatedAt: Date;
+        type: import(".prisma/client").$Enums.ConsultationType;
         ownerId: string;
         date: Date;
         veterinarianId: string;
@@ -281,11 +285,11 @@ export declare class ConsultationsService {
         protocolItemId: string;
     }>;
     remove(id: string): Promise<{
-        type: import(".prisma/client").$Enums.ConsultationType;
         id: string;
         status: import(".prisma/client").$Enums.ConsultationStatus;
         createdAt: Date;
         updatedAt: Date;
+        type: import(".prisma/client").$Enums.ConsultationType;
         ownerId: string;
         date: Date;
         veterinarianId: string;
@@ -294,5 +298,6 @@ export declare class ConsultationsService {
         chiefComplaint: string | null;
         adherencePercentage: number | null;
     }>;
+    generatePDF(id: string): Promise<Buffer>;
     private recalculateAdherence;
 }

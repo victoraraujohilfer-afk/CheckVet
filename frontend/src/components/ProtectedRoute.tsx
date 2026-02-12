@@ -25,7 +25,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     const redirectTo =
-      user.role === Role.ADMIN || user.role === Role.SUPERVISOR
+      user.role === Role.ADMIN
         ? '/admin/dashboard'
         : '/vet/dashboard';
     return <Navigate to={redirectTo} replace />;

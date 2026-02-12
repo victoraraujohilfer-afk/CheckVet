@@ -5,9 +5,9 @@ import { QueryUserDto } from './dto/query-user.dto';
 export declare class UsersService {
     private prisma;
     constructor(prisma: PrismaService);
-    create(dto: CreateUserDto): Promise<{
-        email: string;
+    create(dto: CreateUserDto, adminId?: string): Promise<{
         id: string;
+        email: string;
         fullName: string;
         phone: string | null;
         role: import(".prisma/client").$Enums.Role;
@@ -17,10 +17,10 @@ export declare class UsersService {
         status: import(".prisma/client").$Enums.UserStatus;
         createdAt: Date;
     }>;
-    findAll(query: QueryUserDto): Promise<{
+    findAll(query: QueryUserDto, currentUserId?: string): Promise<{
         users: {
-            email: string;
             id: string;
+            email: string;
             fullName: string;
             phone: string | null;
             role: import(".prisma/client").$Enums.Role;
@@ -39,8 +39,8 @@ export declare class UsersService {
         totalPages: number;
     }>;
     findOne(id: string): Promise<{
-        email: string;
         id: string;
+        email: string;
         fullName: string;
         phone: string | null;
         role: import(".prisma/client").$Enums.Role;
@@ -56,8 +56,8 @@ export declare class UsersService {
         };
     }>;
     update(id: string, dto: UpdateUserDto): Promise<{
-        email: string;
         id: string;
+        email: string;
         fullName: string;
         phone: string | null;
         role: import(".prisma/client").$Enums.Role;

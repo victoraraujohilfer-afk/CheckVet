@@ -6,8 +6,8 @@ export declare class PatientsService {
     constructor(prisma: PrismaService);
     create(dto: CreatePatientDto): Promise<{
         owner: {
-            email: string | null;
             id: string;
+            email: string | null;
             fullName: string;
             phone: string;
             createdAt: Date;
@@ -29,8 +29,8 @@ export declare class PatientsService {
     findAll(ownerId?: string, search?: string, page?: number, limit?: number): Promise<{
         patients: ({
             owner: {
-                email: string | null;
                 id: string;
+                email: string | null;
                 fullName: string;
                 phone: string;
                 createdAt: Date;
@@ -55,8 +55,8 @@ export declare class PatientsService {
     }>;
     findOne(id: string): Promise<{
         owner: {
-            email: string | null;
             id: string;
+            email: string | null;
             fullName: string;
             phone: string;
             createdAt: Date;
@@ -64,11 +64,11 @@ export declare class PatientsService {
             address: string | null;
         };
         consultations: {
-            type: import(".prisma/client").$Enums.ConsultationType;
             id: string;
             status: import(".prisma/client").$Enums.ConsultationStatus;
             createdAt: Date;
             updatedAt: Date;
+            type: import(".prisma/client").$Enums.ConsultationType;
             ownerId: string;
             date: Date;
             veterinarianId: string;
@@ -91,8 +91,8 @@ export declare class PatientsService {
     }>;
     update(id: string, dto: UpdatePatientDto): Promise<{
         owner: {
-            email: string | null;
             id: string;
+            email: string | null;
             fullName: string;
             phone: string;
             createdAt: Date;

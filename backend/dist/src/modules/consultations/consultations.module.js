@@ -10,13 +10,14 @@ exports.ConsultationsModule = void 0;
 const common_1 = require("@nestjs/common");
 const consultations_service_1 = require("./consultations.service");
 const consultations_controller_1 = require("./consultations.controller");
+const pdf_service_1 = require("./pdf.service");
 let ConsultationsModule = class ConsultationsModule {
 };
 exports.ConsultationsModule = ConsultationsModule;
 exports.ConsultationsModule = ConsultationsModule = __decorate([
     (0, common_1.Module)({
         controllers: [consultations_controller_1.ConsultationsController],
-        providers: [consultations_service_1.ConsultationsService],
+        providers: [consultations_service_1.ConsultationsService, pdf_service_1.PDFService],
         exports: [consultations_service_1.ConsultationsService],
     })
 ], ConsultationsModule);

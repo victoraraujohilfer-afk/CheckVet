@@ -36,7 +36,6 @@ const VeterinarianNew = () => {
         email: "",
         crmv: "",
         phone: "",
-        role: "",
         specialization: "",
         password: "",
         confirmPassword: "",
@@ -57,7 +56,7 @@ const VeterinarianNew = () => {
                 fullName: formData.name,
                 email: formData.email,
                 password: formData.password,
-                role: (formData.role || Role.VETERINARIAN) as Role,
+                role: Role.VETERINARIAN,
                 phone: formData.phone,
                 crmv: formData.crmv,
                 specialization: formData.specialization ? (formData.specialization as Specialization) : undefined,
@@ -176,7 +175,7 @@ const VeterinarianNew = () => {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
+                                    <div className="space-y-2 md:col-span-2">
                                         <Label htmlFor="crmv">CRMV *</Label>
                                         <Input
                                             id="crmv"
@@ -187,26 +186,6 @@ const VeterinarianNew = () => {
                                                 setFormData({ ...formData, crmv: e.target.value })
                                             }
                                         />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="role">Função *</Label>
-                                        <Select
-                                            required
-                                            value={formData.role}
-                                            onValueChange={(value) =>
-                                                setFormData({ ...formData, role: value })
-                                            }
-                                        >
-                                            <SelectTrigger id="role">
-                                                <SelectValue placeholder="Selecione" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value={Role.VETERINARIAN}>{roleLabels[Role.VETERINARIAN]}</SelectItem>
-                                                <SelectItem value={Role.SUPERVISOR}>{roleLabels[Role.SUPERVISOR]}</SelectItem>
-                                                <SelectItem value={Role.COORDINATOR}>{roleLabels[Role.COORDINATOR]}</SelectItem>
-                                            </SelectContent>
-                                        </Select>
                                     </div>
 
                                     <div className="space-y-2 md:col-span-2">

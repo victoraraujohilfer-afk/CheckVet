@@ -6,8 +6,8 @@ export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
     getMe(userId: string): Promise<{
-        email: string;
         id: string;
+        email: string;
         fullName: string;
         phone: string | null;
         role: import(".prisma/client").$Enums.Role;
@@ -22,10 +22,10 @@ export declare class UsersController {
             consultations: number;
         };
     }>;
-    findAll(query: QueryUserDto): Promise<{
+    findAll(query: QueryUserDto, userId: string): Promise<{
         users: {
-            email: string;
             id: string;
+            email: string;
             fullName: string;
             phone: string | null;
             role: import(".prisma/client").$Enums.Role;
@@ -44,8 +44,8 @@ export declare class UsersController {
         totalPages: number;
     }>;
     findOne(id: string): Promise<{
-        email: string;
         id: string;
+        email: string;
         fullName: string;
         phone: string | null;
         role: import(".prisma/client").$Enums.Role;
@@ -60,9 +60,9 @@ export declare class UsersController {
             consultations: number;
         };
     }>;
-    create(dto: CreateUserDto): Promise<{
-        email: string;
+    create(dto: CreateUserDto, adminId: string): Promise<{
         id: string;
+        email: string;
         fullName: string;
         phone: string | null;
         role: import(".prisma/client").$Enums.Role;
@@ -73,8 +73,8 @@ export declare class UsersController {
         createdAt: Date;
     }>;
     update(id: string, dto: UpdateUserDto): Promise<{
-        email: string;
         id: string;
+        email: string;
         fullName: string;
         phone: string | null;
         role: import(".prisma/client").$Enums.Role;

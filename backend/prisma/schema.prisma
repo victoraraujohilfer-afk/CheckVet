@@ -8,22 +8,24 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(uuid())
-  email          String          @unique
-  passwordHash   String          @map("password_hash")
-  fullName       String          @map("full_name")
-  phone          String?
-  role           Role            @default(VETERINARIAN)
-  crmv           String?
-  specialization Specialization?
-  clinicName     String?         @map("clinic_name")
-  status         UserStatus      @default(ACTIVE)
-  refreshToken   String?         @map("refresh_token")
-  lastLogin      DateTime?       @map("last_login")
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
-  consultations  Consultation[]
-  protocols      Protocol[]
+  id                 String          @id @default(uuid())
+  email              String          @unique
+  passwordHash       String          @map("password_hash")
+  fullName           String          @map("full_name")
+  phone              String?
+  role               Role            @default(VETERINARIAN)
+  crmv               String?
+  specialization     Specialization?
+  clinicName         String?         @map("clinic_name")
+  clinicLogoUrl      String?         @map("clinic_logo_url")
+  mustChangePassword Boolean         @default(false) @map("must_change_password")
+  status             UserStatus      @default(ACTIVE)
+  refreshToken       String?         @map("refresh_token")
+  lastLogin          DateTime?       @map("last_login")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+  consultations      Consultation[]
+  protocols          Protocol[]
 
   @@map("users")
 }
@@ -206,8 +208,6 @@ model SystemSettings {
 enum Role {
   ADMIN
   VETERINARIAN
-  SUPERVISOR
-  COORDINATOR
 }
 
 enum UserStatus {

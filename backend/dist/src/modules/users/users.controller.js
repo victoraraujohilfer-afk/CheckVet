@@ -31,14 +31,14 @@ let UsersController = class UsersController {
     async getMe(userId) {
         return this.usersService.findOne(userId);
     }
-    async findAll(query) {
-        return this.usersService.findAll(query);
+    async findAll(query, userId) {
+        return this.usersService.findAll(query, userId);
     }
     async findOne(id) {
         return this.usersService.findOne(id);
     }
-    async create(dto) {
-        return this.usersService.create(dto);
+    async create(dto, adminId) {
+        return this.usersService.create(dto, adminId);
     }
     async update(id, dto) {
         return this.usersService.update(id, dto);
@@ -58,16 +58,17 @@ __decorate([
 ], UsersController.prototype, "getMe", null);
 __decorate([
     (0, common_1.Get)(),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPERVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
     (0, swagger_1.ApiOperation)({ summary: 'Listar usuários (admin)' }),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [query_user_dto_1.QueryUserDto]),
+    __metadata("design:paramtypes", [query_user_dto_1.QueryUserDto, String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPERVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
     (0, swagger_1.ApiOperation)({ summary: 'Obter detalhes de um usuário' }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -79,8 +80,9 @@ __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
     (0, swagger_1.ApiOperation)({ summary: 'Criar novo usuário' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
+    __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto, String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "create", null);
 __decorate([
