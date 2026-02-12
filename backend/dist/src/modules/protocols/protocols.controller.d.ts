@@ -4,7 +4,25 @@ import { UpdateProtocolDto } from './dto/update-protocol.dto';
 export declare class ProtocolsController {
     private readonly protocolsService;
     constructor(protocolsService: ProtocolsService);
-    findAll(type?: string): Promise<({
+    create(dto: CreateProtocolDto, userId: string): Promise<{
+        items: {
+            id: string;
+            name: string;
+            order: number;
+            isRequired: boolean;
+            protocolId: string;
+        }[];
+    } & {
+        type: import(".prisma/client").$Enums.ProtocolType;
+        description: string | null;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        name: string;
+        isActive: boolean;
+        veterinarianId: string | null;
+    }>;
+    findAll(userId: string, type?: string): Promise<({
         items: {
             id: string;
             name: string;
@@ -23,8 +41,9 @@ export declare class ProtocolsController {
         updatedAt: Date;
         name: string;
         isActive: boolean;
+        veterinarianId: string | null;
     })[]>;
-    findOne(id: string): Promise<{
+    findOne(id: string, userId: string): Promise<{
         items: {
             id: string;
             name: string;
@@ -40,8 +59,9 @@ export declare class ProtocolsController {
         updatedAt: Date;
         name: string;
         isActive: boolean;
+        veterinarianId: string | null;
     }>;
-    create(dto: CreateProtocolDto): Promise<{
+    update(id: string, dto: UpdateProtocolDto, userId: string): Promise<{
         items: {
             id: string;
             name: string;
@@ -57,16 +77,9 @@ export declare class ProtocolsController {
         updatedAt: Date;
         name: string;
         isActive: boolean;
+        veterinarianId: string | null;
     }>;
-    update(id: string, dto: UpdateProtocolDto): Promise<{
-        items: {
-            id: string;
-            name: string;
-            order: number;
-            isRequired: boolean;
-            protocolId: string;
-        }[];
-    } & {
+    remove(id: string, userId: string): Promise<{
         type: import(".prisma/client").$Enums.ProtocolType;
         description: string | null;
         id: string;
@@ -74,8 +87,9 @@ export declare class ProtocolsController {
         updatedAt: Date;
         name: string;
         isActive: boolean;
+        veterinarianId: string | null;
     }>;
-    remove(id: string): Promise<{
+    hardDelete(id: string, userId: string): Promise<{
         type: import(".prisma/client").$Enums.ProtocolType;
         description: string | null;
         id: string;
@@ -83,5 +97,6 @@ export declare class ProtocolsController {
         updatedAt: Date;
         name: string;
         isActive: boolean;
+        veterinarianId: string | null;
     }>;
 }

@@ -16,11 +16,12 @@ let ProtocolsService = class ProtocolsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(dto) {
+    async create(dto, veterinarianId) {
         const { items, ...protocolData } = dto;
         return this.prisma.protocol.create({
             data: {
                 ...protocolData,
+                veterinarianId,
                 items: {
                     create: items.map((item, index) => ({
                         name: item.name,
@@ -32,38 +33,74 @@ let ProtocolsService = class ProtocolsService {
             include: { items: { orderBy: { order: 'asc' } } },
         });
     }
-    async findAll(type) {
-        const where = { isActive: true };
+    async findAll(veterinarianId, type) {
+        const where = {
+            isActive: true,
+            veterinarianId,
+        };
         if (type)
             where.type = type;
         return this.prisma.protocol.findMany({
             where,
-            include: { items: { orderBy: { order: 'asc' } }, _count: { select: { consultations: true } } },
-            orderBy: { name: 'asc' },
+            include: {
+                items: { orderBy: { order: 'asc' } },
+                _count: { select: { consultations: true } }
+            },
+            orderBy: { createdAt: 'desc' },
         });
     }
-    async findOne(id) {
+    async findOne(id, veterinarianId) {
         const protocol = await this.prisma.protocol.findUnique({
             where: { id },
             include: { items: { orderBy: { order: 'asc' } } },
         });
-        if (!protocol)
+        if (!protocol) {
             throw new common_1.NotFoundException('Protocolo não encontrado');
+        }
+        if (protocol.veterinarianId !== veterinarianId) {
+            throw new common_1.ForbiddenException('Você não tem permissão para acessar este protocolo');
+        }
         return protocol;
     }
-    async update(id, dto) {
-        await this.findOne(id);
+    async update(id, dto, veterinarianId) {
+        await this.findOne(id, veterinarianId);
+        const { items, ...protocolData } = dto;
+        if (items) {
+            await this.prisma.protocolItem.deleteMany({
+                where: { protocolId: id },
+            });
+            return this.prisma.protocol.update({
+                where: { id },
+                data: {
+                    ...protocolData,
+                    items: {
+                        create: items.map((item, index) => ({
+                            name: item.name,
+                            order: item.order ?? index + 1,
+                            isRequired: item.isRequired ?? true,
+                        })),
+                    },
+                },
+                include: { items: { orderBy: { order: 'asc' } } },
+            });
+        }
         return this.prisma.protocol.update({
             where: { id },
-            data: dto,
+            data: protocolData,
             include: { items: { orderBy: { order: 'asc' } } },
         });
     }
-    async remove(id) {
-        await this.findOne(id);
+    async remove(id, veterinarianId) {
+        await this.findOne(id, veterinarianId);
         return this.prisma.protocol.update({
             where: { id },
             data: { isActive: false },
+        });
+    }
+    async hardDelete(id, veterinarianId) {
+        await this.findOne(id, veterinarianId);
+        return this.prisma.protocol.delete({
+            where: { id },
         });
     }
 };

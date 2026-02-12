@@ -12,6 +12,7 @@ import VetDashboard from "./pages/vet/Dashboard";
 import VetHistory from "./pages/vet/History";
 import VetConsultationNew from "./pages/vet/ConsultationNew";
 import VetConsultationDetails from "./pages/vet/ConsultationDetails";
+import VetProtocols from "./pages/vet/Protocols";  
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminVeterinarians from "./pages/admin/Veterinarians";
 import AdminVeterinarianNew from "./pages/admin/VeterinarianNew";
@@ -56,6 +57,10 @@ const App = () => (
             } />
             <Route path="/vet/consultation/:id" element={
               <ProtectedRoute allowedRoles={vetRoles}><VetConsultationDetails /></ProtectedRoute>
+            } />
+            {/* ✅ NOVA ROTA: Meus Protocolos */}
+            <Route path="/vet/protocols" element={
+              <ProtectedRoute allowedRoles={vetRoles}><VetProtocols /></ProtectedRoute>
             } />
 
             {/* Admin routes */}

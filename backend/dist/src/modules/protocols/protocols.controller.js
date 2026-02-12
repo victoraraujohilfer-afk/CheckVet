@@ -15,82 +15,91 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProtocolsController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const client_1 = require("@prisma/client");
 const protocols_service_1 = require("./protocols.service");
 const create_protocol_dto_1 = require("./dto/create-protocol.dto");
 const update_protocol_dto_1 = require("./dto/update-protocol.dto");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
-const roles_guard_1 = require("../../common/guards/roles.guard");
-const roles_decorator_1 = require("../../common/decorators/roles.decorator");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 let ProtocolsController = class ProtocolsController {
     constructor(protocolsService) {
         this.protocolsService = protocolsService;
     }
-    async findAll(type) {
-        return this.protocolsService.findAll(type);
+    async create(dto, userId) {
+        return this.protocolsService.create(dto, userId);
     }
-    async findOne(id) {
-        return this.protocolsService.findOne(id);
+    async findAll(userId, type) {
+        return this.protocolsService.findAll(userId, type);
     }
-    async create(dto) {
-        return this.protocolsService.create(dto);
+    async findOne(id, userId) {
+        return this.protocolsService.findOne(id, userId);
     }
-    async update(id, dto) {
-        return this.protocolsService.update(id, dto);
+    async update(id, dto, userId) {
+        return this.protocolsService.update(id, dto, userId);
     }
-    async remove(id) {
-        return this.protocolsService.remove(id);
+    async remove(id, userId) {
+        return this.protocolsService.remove(id, userId);
+    }
+    async hardDelete(id, userId) {
+        return this.protocolsService.hardDelete(id, userId);
     }
 };
 exports.ProtocolsController = ProtocolsController;
 __decorate([
-    (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Listar protocolos ativos' }),
-    (0, swagger_1.ApiQuery)({ name: 'type', required: false }),
-    __param(0, (0, common_1.Query)('type')),
+    (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Criar novo protocolo personalizado' }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [create_protocol_dto_1.CreateProtocolDto, String]),
+    __metadata("design:returntype", Promise)
+], ProtocolsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Listar meus protocolos' }),
+    (0, swagger_1.ApiQuery)({ name: 'type', required: false }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)('id')),
+    __param(1, (0, common_1.Query)('type')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], ProtocolsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Obter protocolo com itens do checklist' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Obter protocolo com itens' }),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], ProtocolsController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Post)(),
-    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
-    (0, swagger_1.ApiOperation)({ summary: 'Criar protocolo (admin)' }),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_protocol_dto_1.CreateProtocolDto]),
-    __metadata("design:returntype", Promise)
-], ProtocolsController.prototype, "create", null);
-__decorate([
     (0, common_1.Patch)(':id'),
-    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
-    (0, swagger_1.ApiOperation)({ summary: 'Atualizar protocolo (admin)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Atualizar protocolo' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_protocol_dto_1.UpdateProtocolDto]),
+    __metadata("design:paramtypes", [String, update_protocol_dto_1.UpdateProtocolDto, String]),
     __metadata("design:returntype", Promise)
 ], ProtocolsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
-    (0, swagger_1.ApiOperation)({ summary: 'Desativar protocolo (admin)' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Desativar protocolo' }),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], ProtocolsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Delete)(':id/permanent'),
+    (0, swagger_1.ApiOperation)({ summary: 'Deletar protocolo permanentemente' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], ProtocolsController.prototype, "hardDelete", null);
 exports.ProtocolsController = ProtocolsController = __decorate([
     (0, swagger_1.ApiTags)('Protocols'),
     (0, swagger_1.ApiBearerAuth)(),

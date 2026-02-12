@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Home, Plus, History, LogOut } from "lucide-react";
+import { Home, Plus, History, ClipboardList, LogOut } from "lucide-react";  // ✅ Adicionado ClipboardList
 import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/checkvet-logo-new.png";
 
@@ -68,6 +68,15 @@ const VetSidebar = ({
                 >
                     <History className="h-4 w-4" />
                     Histórico
+                </Button>
+                {/* ✅ NOVO: Botão Meus Protocolos */}
+                <Button
+                    variant={isActive("/vet/protocols") ? "default" : "ghost"}
+                    className="w-full justify-start gap-3"
+                    onClick={() => navigate("/vet/protocols")}
+                >
+                    <ClipboardList className="h-4 w-4" />
+                    Meus Protocolos
                 </Button>
             </nav>
 

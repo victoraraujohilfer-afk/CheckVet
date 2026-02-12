@@ -1,5 +1,13 @@
-import { CreateProtocolDto } from './create-protocol.dto';
-declare const UpdateProtocolDto_base: import("@nestjs/mapped-types").MappedType<Partial<Omit<CreateProtocolDto, "items">>>;
-export declare class UpdateProtocolDto extends UpdateProtocolDto_base {
+import { ProtocolType } from '@prisma/client';
+export declare class ProtocolItemDto {
+    name: string;
+    order: number;
+    isRequired?: boolean;
 }
-export {};
+export declare class UpdateProtocolDto {
+    name?: string;
+    description?: string;
+    type?: ProtocolType;
+    items?: ProtocolItemDto[];
+    isActive?: boolean;
+}

@@ -100,12 +100,16 @@ export interface Patient {
   createdAt?: string;
 }
 
+// ✅ ATUALIZADO: Adicionados veterinarianId, createdAt e updatedAt
 export interface Protocol {
   id: string;
   name: string;
   description?: string;
   type: ProtocolType;
+  veterinarianId?: string;        // ✅ NOVO: ID do veterinário dono do protocolo
   isActive: boolean;
+  createdAt: string;              // ✅ NOVO: Data de criação
+  updatedAt?: string;             // ✅ NOVO: Data de atualização
   items?: ProtocolItem[];
   _count?: { consultations: number };
 }

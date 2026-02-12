@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsArray, ValidateNested, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { ProtocolType } from '@prisma/client';
@@ -8,11 +8,13 @@ export class ProtocolItemDto {
   @IsString()
   name: string;
 
-  @ApiProperty({ example: 1 })
-  order: number;
+  @ApiPropertyOptional({ example: 1 })
+  @IsOptional()
+  order?: number;  // ✅ AGORA É OPCIONAL (o backend define automaticamente se não vier)
 
   @ApiPropertyOptional({ default: true })
   @IsOptional()
+  @IsBoolean()
   isRequired?: boolean;
 }
 

@@ -153,15 +153,6 @@ export function useCreatePatient() {
   });
 }
 
-// ─── Protocols ──────────────────────────────────────────
-
-export function useProtocols(type?: string) {
-  return useQuery({
-    queryKey: ['protocols', type],
-    queryFn: () => protocolsService.findAll(type),
-  });
-}
-
 // ─── Analytics ──────────────────────────────────────────
 
 export function useDashboardAnalytics() {
@@ -199,5 +190,49 @@ export function useUpdateSettings() {
   return useMutation({
     mutationFn: settingsService.update,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['settings'] }),
+  });
+}
+
+// ─── Protocols ───────────────────────────────────
+
+export function useProtocols(type?: string) {
+  return useQuery({
+    queryKey: ['protocols', type],
+    queryFn: () => protocolsService.findAll(type),
+  });
+}
+
+export function useProtocol(id: string) {
+  return useQuery({
+    queryKey: ['protocol', id],
+    queryFn: () => protocolsService.findOne(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateProtocol() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: protocolsService.create,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['protocols'] }),
+  });
+}
+
+export function useUpdateProtocol() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => protocolsService.update(id, data),
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ['protocols'] });
+      qc.invalidateQueries({ queryKey: ['protocol', variables.id] });
+    },
+  });
+}
+
+export function useDeleteProtocol() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: protocolsService.remove,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['protocols'] }),
   });
 }

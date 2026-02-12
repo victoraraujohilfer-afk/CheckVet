@@ -53,12 +53,12 @@ export const specializationLabels: Record<Specialization, string> = {
   [Specialization.ONCOLOGY]: 'Oncologia',
 };
 
-export const protocolTypeLabels: Record<ProtocolType, string> = {
-  [ProtocolType.GENERAL_EXAM]: 'Exame Clínico Geral',
-  [ProtocolType.VACCINATION]: 'Vacinação',
-  [ProtocolType.EMERGENCY]: 'Emergência',
-  [ProtocolType.PRE_SURGERY]: 'Pré-operatório',
-  [ProtocolType.POST_SURGERY]: 'Pós-cirúrgico',
+export const protocolTypeLabels: Record<string, string> = {
+  GENERAL_EXAM: 'Exame Geral',
+  VACCINATION: 'Vacinação',
+  EMERGENCY: 'Emergência',
+  PRE_SURGERY: 'Pré-Cirúrgico',
+  POST_SURGERY: 'Pós-Cirúrgico',
 };
 
 export const userStatusLabels: Record<UserStatus, string> = {

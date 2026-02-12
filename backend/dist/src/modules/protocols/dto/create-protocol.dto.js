@@ -23,12 +23,14 @@ __decorate([
     __metadata("design:type", String)
 ], ProtocolItemDto.prototype, "name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 1 }),
+    (0, swagger_1.ApiPropertyOptional)({ example: 1 }),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], ProtocolItemDto.prototype, "order", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ default: true }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], ProtocolItemDto.prototype, "isRequired", void 0);
 class CreateProtocolDto {

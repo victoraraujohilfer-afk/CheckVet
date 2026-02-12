@@ -8,185 +8,165 @@ export declare class ConsultationsService {
     private prisma;
     constructor(prisma: PrismaService);
     create(dto: CreateConsultationDto, veterinarianId: string): Promise<{
+        owner: {
+            email: string | null;
+            id: string;
+            fullName: string;
+            phone: string;
+            createdAt: Date;
+            updatedAt: Date;
+            address: string | null;
+        };
         patient: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            ownerId: string;
             name: string;
+            ownerId: string;
             species: import(".prisma/client").$Enums.Species;
             breed: string | null;
             gender: import(".prisma/client").$Enums.Gender;
             age: string | null;
             weight: Prisma.Decimal | null;
         };
-        owner: {
+        protocol: ({
+            items: {
+                id: string;
+                name: string;
+                order: number;
+                isRequired: boolean;
+                protocolId: string;
+            }[];
+        } & {
+            type: import(".prisma/client").$Enums.ProtocolType;
+            description: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            email: string | null;
-            fullName: string;
-            phone: string;
-            address: string | null;
-        };
+            name: string;
+            isActive: boolean;
+            veterinarianId: string | null;
+        }) | null;
         veterinarian: {
             id: string;
             fullName: string;
             crmv: string | null;
         };
-        protocol: ({
-            items: {
-                id: string;
-                protocolId: string;
-                order: number;
-                name: string;
-                isRequired: boolean;
-            }[];
-        } & {
-            id: string;
-            type: import(".prisma/client").$Enums.ProtocolType;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            description: string | null;
-            isActive: boolean;
-        }) | null;
     } & {
-        id: string;
         type: import(".prisma/client").$Enums.ConsultationType;
-        chiefComplaint: string | null;
-        date: Date;
+        id: string;
         status: import(".prisma/client").$Enums.ConsultationStatus;
-        adherencePercentage: number | null;
         createdAt: Date;
         updatedAt: Date;
-        patientId: string;
         ownerId: string;
+        date: Date;
         veterinarianId: string;
         protocolId: string | null;
+        patientId: string;
+        chiefComplaint: string | null;
+        adherencePercentage: number | null;
     }>;
     findAll(query: QueryConsultationDto): Promise<{
         consultations: ({
+            owner: {
+                email: string | null;
+                id: string;
+                fullName: string;
+                phone: string;
+                createdAt: Date;
+                updatedAt: Date;
+                address: string | null;
+            };
             patient: {
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                ownerId: string;
                 name: string;
+                ownerId: string;
                 species: import(".prisma/client").$Enums.Species;
                 breed: string | null;
                 gender: import(".prisma/client").$Enums.Gender;
                 age: string | null;
                 weight: Prisma.Decimal | null;
             };
-            owner: {
+            protocol: {
+                type: import(".prisma/client").$Enums.ProtocolType;
                 id: string;
-                createdAt: Date;
-                updatedAt: Date;
-                email: string | null;
-                fullName: string;
-                phone: string;
-                address: string | null;
-            };
+                name: string;
+            } | null;
             veterinarian: {
                 id: string;
                 fullName: string;
                 crmv: string | null;
             };
-            protocol: {
-                id: string;
-                type: import(".prisma/client").$Enums.ProtocolType;
-                name: string;
-            } | null;
         } & {
-            id: string;
             type: import(".prisma/client").$Enums.ConsultationType;
-            chiefComplaint: string | null;
-            date: Date;
+            id: string;
             status: import(".prisma/client").$Enums.ConsultationStatus;
-            adherencePercentage: number | null;
             createdAt: Date;
             updatedAt: Date;
-            patientId: string;
             ownerId: string;
+            date: Date;
             veterinarianId: string;
             protocolId: string | null;
+            patientId: string;
+            chiefComplaint: string | null;
+            adherencePercentage: number | null;
         })[];
         total: number;
         page: number;
         totalPages: number;
     }>;
     findOne(id: string): Promise<{
+        owner: {
+            email: string | null;
+            id: string;
+            fullName: string;
+            phone: string;
+            createdAt: Date;
+            updatedAt: Date;
+            address: string | null;
+        };
         patient: {
             owner: {
-                id: string;
-                createdAt: Date;
-                updatedAt: Date;
                 email: string | null;
+                id: string;
                 fullName: string;
                 phone: string;
+                createdAt: Date;
+                updatedAt: Date;
                 address: string | null;
             };
         } & {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            ownerId: string;
             name: string;
+            ownerId: string;
             species: import(".prisma/client").$Enums.Species;
             breed: string | null;
             gender: import(".prisma/client").$Enums.Gender;
             age: string | null;
             weight: Prisma.Decimal | null;
         };
-        owner: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            email: string | null;
-            fullName: string;
-            phone: string;
-            address: string | null;
-        };
-        veterinarian: {
-            id: string;
-            fullName: string;
-            crmv: string | null;
-            specialization: import(".prisma/client").$Enums.Specialization | null;
-        };
         protocol: ({
             items: {
                 id: string;
-                protocolId: string;
-                order: number;
                 name: string;
+                order: number;
                 isRequired: boolean;
+                protocolId: string;
             }[];
         } & {
-            id: string;
             type: import(".prisma/client").$Enums.ProtocolType;
+            description: string | null;
+            id: string;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            description: string | null;
             isActive: boolean;
+            veterinarianId: string | null;
         }) | null;
-        checklist: ({
-            protocolItem: {
-                id: string;
-                protocolId: string;
-                order: number;
-                name: string;
-                isRequired: boolean;
-            };
-        } & {
-            id: string;
-            consultationId: string;
-            protocolItemId: string;
-            completed: boolean;
-            completedAt: Date | null;
-            notes: string | null;
-        })[];
         soapNote: {
             id: string;
             createdAt: Date;
@@ -197,14 +177,12 @@ export declare class ConsultationsService {
             assessment: string | null;
             plan: string | null;
         } | null;
-        procedures: {
+        veterinarian: {
             id: string;
-            createdAt: Date;
-            name: string;
-            consultationId: string;
-            code: string | null;
-            value: Prisma.Decimal | null;
-        }[];
+            fullName: string;
+            crmv: string | null;
+            specialization: import(".prisma/client").$Enums.Specialization | null;
+        };
         attachments: {
             id: string;
             createdAt: Date;
@@ -214,77 +192,101 @@ export declare class ConsultationsService {
             fileType: string | null;
             fileUrl: string;
         }[];
+        checklist: ({
+            protocolItem: {
+                id: string;
+                name: string;
+                order: number;
+                isRequired: boolean;
+                protocolId: string;
+            };
+        } & {
+            id: string;
+            completed: boolean;
+            completedAt: Date | null;
+            notes: string | null;
+            consultationId: string;
+            protocolItemId: string;
+        })[];
+        procedures: {
+            id: string;
+            createdAt: Date;
+            name: string;
+            consultationId: string;
+            code: string | null;
+            value: Prisma.Decimal | null;
+        }[];
     } & {
-        id: string;
         type: import(".prisma/client").$Enums.ConsultationType;
-        chiefComplaint: string | null;
-        date: Date;
+        id: string;
         status: import(".prisma/client").$Enums.ConsultationStatus;
-        adherencePercentage: number | null;
         createdAt: Date;
         updatedAt: Date;
-        patientId: string;
         ownerId: string;
+        date: Date;
         veterinarianId: string;
         protocolId: string | null;
+        patientId: string;
+        chiefComplaint: string | null;
+        adherencePercentage: number | null;
     }>;
     update(id: string, dto: UpdateConsultationDto): Promise<{
+        owner: {
+            email: string | null;
+            id: string;
+            fullName: string;
+            phone: string;
+            createdAt: Date;
+            updatedAt: Date;
+            address: string | null;
+        };
         patient: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            ownerId: string;
             name: string;
+            ownerId: string;
             species: import(".prisma/client").$Enums.Species;
             breed: string | null;
             gender: import(".prisma/client").$Enums.Gender;
             age: string | null;
             weight: Prisma.Decimal | null;
         };
-        owner: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            email: string | null;
-            fullName: string;
-            phone: string;
-            address: string | null;
-        };
     } & {
-        id: string;
         type: import(".prisma/client").$Enums.ConsultationType;
-        chiefComplaint: string | null;
-        date: Date;
+        id: string;
         status: import(".prisma/client").$Enums.ConsultationStatus;
-        adherencePercentage: number | null;
         createdAt: Date;
         updatedAt: Date;
-        patientId: string;
         ownerId: string;
+        date: Date;
         veterinarianId: string;
         protocolId: string | null;
+        patientId: string;
+        chiefComplaint: string | null;
+        adherencePercentage: number | null;
     }>;
     updateChecklistItem(consultationId: string, itemId: string, dto: UpdateChecklistDto): Promise<{
         id: string;
-        consultationId: string;
-        protocolItemId: string;
         completed: boolean;
         completedAt: Date | null;
         notes: string | null;
+        consultationId: string;
+        protocolItemId: string;
     }>;
     remove(id: string): Promise<{
-        id: string;
         type: import(".prisma/client").$Enums.ConsultationType;
-        chiefComplaint: string | null;
-        date: Date;
+        id: string;
         status: import(".prisma/client").$Enums.ConsultationStatus;
-        adherencePercentage: number | null;
         createdAt: Date;
         updatedAt: Date;
-        patientId: string;
         ownerId: string;
+        date: Date;
         veterinarianId: string;
         protocolId: string | null;
+        patientId: string;
+        chiefComplaint: string | null;
+        adherencePercentage: number | null;
     }>;
     private recalculateAdherence;
 }

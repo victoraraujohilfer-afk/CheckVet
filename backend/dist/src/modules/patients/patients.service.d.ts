@@ -71,10 +71,10 @@ export declare class PatientsService {
             updatedAt: Date;
             ownerId: string;
             date: Date;
-            patientId: string;
-            protocolId: string | null;
-            chiefComplaint: string | null;
             veterinarianId: string;
+            protocolId: string | null;
+            patientId: string;
+            chiefComplaint: string | null;
             adherencePercentage: number | null;
         }[];
     } & {
