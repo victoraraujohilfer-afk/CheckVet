@@ -5,27 +5,27 @@ export declare class TranscriptionController {
     constructor(transcriptionService: TranscriptionService);
     startTranscription(dto: StartTranscriptionDto, userId: string): Promise<{
         id: string;
-        createdAt: Date;
-        consultationId: string;
         transcript: string;
-        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
+        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
+        createdAt: Date;
         expiresAt: Date;
+        consultationId: string;
     }>;
     recordConsent(dto: ConsentDto, userId: string): Promise<{
         id: string;
-        createdAt: Date;
-        consultationId: string;
         transcript: string;
-        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
+        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
+        createdAt: Date;
         expiresAt: Date;
+        consultationId: string;
     }>;
     analyzeTranscript(dto: AnalyzeTranscriptDto, userId: string): Promise<{
         itemsChecked: number;
@@ -39,26 +39,26 @@ export declare class TranscriptionController {
     }>;
     finishTranscription(consultationId: string, duration: number, userId: string): Promise<{
         id: string;
-        createdAt: Date;
-        consultationId: string;
         transcript: string;
-        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
+        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
+        createdAt: Date;
         expiresAt: Date;
+        consultationId: string;
     }>;
     getTranscription(consultationId: string, userId: string): Promise<{
         id: string;
-        createdAt: Date;
-        consultationId: string;
         transcript: string;
-        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
+        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
+        createdAt: Date;
         expiresAt: Date;
+        consultationId: string;
     } | null>;
 }

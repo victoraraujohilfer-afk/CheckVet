@@ -8,27 +8,27 @@ export declare class TranscriptionService {
     private validateOwnership;
     startTranscription(consultationId: string, veterinarianId: string): Promise<{
         id: string;
-        createdAt: Date;
-        consultationId: string;
         transcript: string;
-        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
+        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
+        createdAt: Date;
         expiresAt: Date;
+        consultationId: string;
     }>;
     recordConsent(dto: ConsentDto, veterinarianId: string): Promise<{
         id: string;
-        createdAt: Date;
-        consultationId: string;
         transcript: string;
-        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
+        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
+        createdAt: Date;
         expiresAt: Date;
+        consultationId: string;
     }>;
     appendTranscript(consultationId: string, text: string): Promise<string>;
     analyzeAndAutoCheck(dto: AnalyzeTranscriptDto, veterinarianId: string): Promise<{
@@ -43,27 +43,27 @@ export declare class TranscriptionService {
     }>;
     finishTranscription(consultationId: string, duration: number, veterinarianId: string): Promise<{
         id: string;
-        createdAt: Date;
-        consultationId: string;
         transcript: string;
-        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
+        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
+        createdAt: Date;
         expiresAt: Date;
+        consultationId: string;
     }>;
     getTranscription(consultationId: string, veterinarianId: string): Promise<{
         id: string;
-        createdAt: Date;
-        consultationId: string;
         transcript: string;
-        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
+        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
+        createdAt: Date;
         expiresAt: Date;
+        consultationId: string;
     } | null>;
     private recalculateAdherence;
     cleanupExpiredTranscripts(): Promise<{
