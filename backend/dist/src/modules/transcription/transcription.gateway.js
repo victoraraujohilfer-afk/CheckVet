@@ -41,11 +41,9 @@ let TranscriptionGateway = TranscriptionGateway_1 = class TranscriptionGateway {
             const veterinarianId = payload.sub;
             const deepgramConnection = this.deepgramService.createLiveConnection({
                 onOpen: () => {
-                    this.logger.log(`Deepgram pronto para consulta ${data.consultationId}`);
                     client.emit('stream-ready');
                 },
                 onTranscript: (text, isFinal) => {
-                    this.logger.debug(`Transcript [${isFinal ? 'FINAL' : 'interim'}]: ${text}`);
                     client.emit('transcript', { text, isFinal });
                     if (isFinal) {
                         const session = this.sessions.get(client.id);
@@ -63,12 +61,9 @@ let TranscriptionGateway = TranscriptionGateway_1 = class TranscriptionGateway {
                     }
                 },
                 onError: (error) => {
-                    this.logger.error(`Deepgram error para socket ${client.id}:`, error.message);
                     client.emit('error', { message: error.message });
                 },
-                onClose: () => {
-                    this.logger.log(`Deepgram fechou para socket ${client.id}`);
-                },
+                onClose: () => { },
             });
             this.sessions.set(client.id, {
                 deepgramConnection,
@@ -77,7 +72,7 @@ let TranscriptionGateway = TranscriptionGateway_1 = class TranscriptionGateway {
                 transcriptBuffer: '',
                 finalSentenceCount: 0,
             });
-            this.logger.log(`Aguardando Deepgram abrir para consulta ${data.consultationId}...`);
+            this.logger.log(`Stream iniciado para consulta ${data.consultationId}`);
         }
         catch (error) {
             this.logger.error('Erro ao iniciar stream:', error);
@@ -86,12 +81,9 @@ let TranscriptionGateway = TranscriptionGateway_1 = class TranscriptionGateway {
     }
     handleAudioChunk(client, data) {
         const session = this.sessions.get(client.id);
-        if (!session) {
-            this.logger.warn(`audio-chunk recebido sem sessão ativa para ${client.id}`);
+        if (!session)
             return;
-        }
         const buffer = Buffer.from(data);
-        this.logger.debug(`audio-chunk recebido: ${buffer.length} bytes para ${client.id}`);
         this.deepgramService.sendAudio(session.deepgramConnection, buffer);
     }
     async handleStopStream(client) {

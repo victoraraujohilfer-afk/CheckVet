@@ -28,7 +28,6 @@ let DeepgramService = DeepgramService_1 = class DeepgramService {
             endpointing: 300,
         });
         connection.on(sdk_1.LiveTranscriptionEvents.Open, () => {
-            this.logger.log('Deepgram: conexão aberta — pronto para receber áudio');
             callbacks.onOpen();
         });
         connection.on(sdk_1.LiveTranscriptionEvents.Transcript, (data) => {
@@ -39,11 +38,9 @@ let DeepgramService = DeepgramService_1 = class DeepgramService {
             }
         });
         connection.on(sdk_1.LiveTranscriptionEvents.Error, (error) => {
-            this.logger.error('Deepgram error:', error);
             callbacks.onError(new Error(error?.message || 'Erro no Deepgram'));
         });
         connection.on(sdk_1.LiveTranscriptionEvents.Close, () => {
-            this.logger.log('Deepgram: conexão fechada');
             callbacks.onClose();
         });
         return connection;

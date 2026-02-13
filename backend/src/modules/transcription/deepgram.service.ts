@@ -32,7 +32,6 @@ export class DeepgramService {
         });
 
         connection.on(LiveTranscriptionEvents.Open, () => {
-            this.logger.log('Deepgram: conexão aberta — pronto para receber áudio');
             callbacks.onOpen();
         });
 
@@ -45,12 +44,10 @@ export class DeepgramService {
         });
 
         connection.on(LiveTranscriptionEvents.Error, (error: any) => {
-            this.logger.error('Deepgram error:', error);
             callbacks.onError(new Error(error?.message || 'Erro no Deepgram'));
         });
 
         connection.on(LiveTranscriptionEvents.Close, () => {
-            this.logger.log('Deepgram: conexão fechada');
             callbacks.onClose();
         });
 
