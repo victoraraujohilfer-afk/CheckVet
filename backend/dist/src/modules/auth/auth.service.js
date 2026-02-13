@@ -14,12 +14,15 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const config_1 = require("@nestjs/config");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const prisma_service_1 = require("../../prisma/prisma.service");
+const email_service_1 = require("../email/email.service");
 let AuthService = class AuthService {
-    constructor(prisma, jwtService, configService) {
+    constructor(prisma, jwtService, configService, emailService) {
         this.prisma = prisma;
         this.jwtService = jwtService;
         this.configService = configService;
+        this.emailService = emailService;
     }
     async login(dto) {
         const user = await this.prisma.user.findUnique({
@@ -106,6 +109,125 @@ let AuthService = class AuthService {
         });
         return { message: 'Senha alterada com sucesso' };
     }
+    async forgotPassword(dto) {
+        const user = await this.prisma.user.findUnique({
+            where: { email: dto.email },
+        });
+        if (!user) {
+            return {
+                message: 'Se o email estiver cadastrado, você receberá instruções para recuperar sua senha',
+            };
+        }
+        if (user.status !== 'ACTIVE') {
+            return {
+                message: 'Se o email estiver cadastrado, você receberá instruções para recuperar sua senha',
+            };
+        }
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetPasswordToken = crypto
+            .createHash('sha256')
+            .update(resetToken)
+            .digest('hex');
+        const resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000);
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                resetPasswordToken,
+                resetPasswordExpires,
+            },
+        });
+        try {
+            await this.emailService.sendPasswordResetEmail(user.email, user.fullName, resetToken);
+        }
+        catch (error) {
+            console.error('Erro ao enviar email de recuperação:', error);
+        }
+        return {
+            message: 'Se o email estiver cadastrado, você receberá instruções para recuperar sua senha',
+        };
+    }
+    async resetPassword(dto) {
+        const resetPasswordToken = crypto
+            .createHash('sha256')
+            .update(dto.token)
+            .digest('hex');
+        const user = await this.prisma.user.findFirst({
+            where: {
+                resetPasswordToken,
+                resetPasswordExpires: {
+                    gt: new Date(),
+                },
+            },
+        });
+        if (!user) {
+            throw new common_1.BadRequestException('Token inválido ou expirado');
+        }
+        if (user.status !== 'ACTIVE') {
+            throw new common_1.ForbiddenException('Usuário inativo');
+        }
+        const newPasswordHash = await bcrypt.hash(dto.newPassword, 12);
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                passwordHash: newPasswordHash,
+                resetPasswordToken: null,
+                resetPasswordExpires: null,
+                mustChangePassword: false,
+                refreshToken: null,
+            },
+        });
+        try {
+            await this.emailService.sendPasswordChangedConfirmation(user.email, user.fullName);
+        }
+        catch (error) {
+            console.error('Erro ao enviar email de confirmação:', error);
+        }
+        return {
+            message: 'Senha redefinida com sucesso. Você já pode fazer login com sua nova senha.',
+        };
+    }
+    async validateResetToken(token) {
+        console.log('[DEBUG] Token recebido:', token);
+        console.log('[DEBUG] Token length:', token?.length);
+        const resetPasswordToken = crypto
+            .createHash('sha256')
+            .update(token)
+            .digest('hex');
+        console.log('[DEBUG] Token hash (SHA256):', resetPasswordToken);
+        const userWithoutDateFilter = await this.prisma.user.findFirst({
+            where: { resetPasswordToken },
+            select: {
+                email: true,
+                fullName: true,
+                resetPasswordToken: true,
+                resetPasswordExpires: true,
+            },
+        });
+        console.log('[DEBUG] Usuário encontrado (sem filtro de data):', userWithoutDateFilter);
+        console.log('[DEBUG] Data atual:', new Date().toISOString());
+        console.log('[DEBUG] Token expira em:', userWithoutDateFilter?.resetPasswordExpires?.toISOString());
+        const user = await this.prisma.user.findFirst({
+            where: {
+                resetPasswordToken,
+                resetPasswordExpires: {
+                    gt: new Date(),
+                },
+            },
+            select: {
+                email: true,
+                fullName: true,
+            },
+        });
+        console.log('[DEBUG] Usuário encontrado (com filtro de data):', user);
+        if (!user) {
+            throw new common_1.BadRequestException('Token inválido ou expirado');
+        }
+        return {
+            valid: true,
+            email: user.email,
+            fullName: user.fullName,
+        };
+    }
     async generateTokens(userId, email, role) {
         const payload = { sub: userId, email, role };
         const [accessToken, refreshToken] = await Promise.all([
@@ -126,6 +248,7 @@ exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         jwt_1.JwtService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        email_service_1.EmailService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

@@ -15,10 +15,10 @@ export declare class PatientsService {
             address: string | null;
         };
     } & {
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
         ownerId: string;
         species: import(".prisma/client").$Enums.Species;
         breed: string | null;
@@ -38,10 +38,10 @@ export declare class PatientsService {
                 address: string | null;
             };
         } & {
+            name: string;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
             ownerId: string;
             species: import(".prisma/client").$Enums.Species;
             breed: string | null;
@@ -64,13 +64,13 @@ export declare class PatientsService {
             address: string | null;
         };
         consultations: {
+            date: Date;
             type: import(".prisma/client").$Enums.ConsultationType;
             id: string;
             status: import(".prisma/client").$Enums.ConsultationStatus;
             createdAt: Date;
             updatedAt: Date;
             ownerId: string;
-            date: Date;
             veterinarianId: string;
             protocolId: string | null;
             patientId: string;
@@ -78,10 +78,10 @@ export declare class PatientsService {
             adherencePercentage: number | null;
         }[];
     } & {
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
         ownerId: string;
         species: import(".prisma/client").$Enums.Species;
         breed: string | null;
@@ -100,10 +100,10 @@ export declare class PatientsService {
             address: string | null;
         };
     } & {
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
         ownerId: string;
         species: import(".prisma/client").$Enums.Species;
         breed: string | null;
@@ -112,10 +112,10 @@ export declare class PatientsService {
         weight: import("@prisma/client/runtime/library").Decimal | null;
     }>;
     remove(id: string): Promise<{
+        name: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
         ownerId: string;
         species: import(".prisma/client").$Enums.Species;
         breed: string | null;

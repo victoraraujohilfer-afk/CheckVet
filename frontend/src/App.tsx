@@ -19,6 +19,8 @@ import AdminVeterinarians from "./pages/admin/Veterinarians";
 import AdminVeterinarianNew from "./pages/admin/VeterinarianNew";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminSettings from "./pages/admin/Settings";
+import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -45,6 +47,8 @@ const App = () => (
             {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/change-password" element={
               <ProtectedRoute allowedRoles={vetRoles}><ChangePassword /></ProtectedRoute>
             } />

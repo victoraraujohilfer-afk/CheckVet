@@ -4,27 +4,27 @@ export declare class ProceduresService {
     private prisma;
     constructor(prisma: PrismaService);
     create(consultationId: string, dto: CreateProcedureDto): Promise<{
+        name: string;
+        value: import("@prisma/client/runtime/library").Decimal | null;
         id: string;
         createdAt: Date;
-        name: string;
         consultationId: string;
-        value: import("@prisma/client/runtime/library").Decimal | null;
         code: string | null;
     }>;
     findByConsultation(consultationId: string): Promise<{
+        name: string;
+        value: import("@prisma/client/runtime/library").Decimal | null;
         id: string;
         createdAt: Date;
-        name: string;
         consultationId: string;
-        value: import("@prisma/client/runtime/library").Decimal | null;
         code: string | null;
     }[]>;
     remove(id: string): Promise<{
+        name: string;
+        value: import("@prisma/client/runtime/library").Decimal | null;
         id: string;
         createdAt: Date;
-        name: string;
         consultationId: string;
-        value: import("@prisma/client/runtime/library").Decimal | null;
         code: string | null;
     }>;
 }

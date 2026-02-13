@@ -6,26 +6,26 @@ export declare class ProtocolsController {
     constructor(protocolsService: ProtocolsService);
     create(dto: CreateProtocolDto, userId: string): Promise<{
         items: {
-            id: string;
             name: string;
+            id: string;
             order: number;
             isRequired: boolean;
             protocolId: string;
         }[];
     } & {
+        name: string;
         type: import(".prisma/client").$Enums.ProtocolType;
         description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
         isActive: boolean;
         veterinarianId: string | null;
     }>;
     findAll(userId: string, type?: string): Promise<({
         items: {
-            id: string;
             name: string;
+            id: string;
             order: number;
             isRequired: boolean;
             protocolId: string;
@@ -34,68 +34,68 @@ export declare class ProtocolsController {
             consultations: number;
         };
     } & {
+        name: string;
         type: import(".prisma/client").$Enums.ProtocolType;
         description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
         isActive: boolean;
         veterinarianId: string | null;
     })[]>;
     findOne(id: string, userId: string): Promise<{
         items: {
-            id: string;
             name: string;
+            id: string;
             order: number;
             isRequired: boolean;
             protocolId: string;
         }[];
     } & {
+        name: string;
         type: import(".prisma/client").$Enums.ProtocolType;
         description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
         isActive: boolean;
         veterinarianId: string | null;
     }>;
     update(id: string, dto: UpdateProtocolDto, userId: string): Promise<{
         items: {
-            id: string;
             name: string;
+            id: string;
             order: number;
             isRequired: boolean;
             protocolId: string;
         }[];
     } & {
+        name: string;
         type: import(".prisma/client").$Enums.ProtocolType;
         description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
         isActive: boolean;
         veterinarianId: string | null;
     }>;
     remove(id: string, userId: string): Promise<{
+        name: string;
         type: import(".prisma/client").$Enums.ProtocolType;
         description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
         isActive: boolean;
         veterinarianId: string | null;
     }>;
     hardDelete(id: string, userId: string): Promise<{
+        name: string;
         type: import(".prisma/client").$Enums.ProtocolType;
         description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        name: string;
         isActive: boolean;
         veterinarianId: string | null;
     }>;

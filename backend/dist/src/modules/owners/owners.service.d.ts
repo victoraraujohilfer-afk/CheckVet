@@ -19,10 +19,10 @@ export declare class OwnersService {
                 consultations: number;
             };
             patients: {
+                name: string;
                 id: string;
                 createdAt: Date;
                 updatedAt: Date;
-                name: string;
                 ownerId: string;
                 species: import(".prisma/client").$Enums.Species;
                 breed: string | null;
@@ -45,10 +45,10 @@ export declare class OwnersService {
     }>;
     findOne(id: string): Promise<{
         patients: {
+            name: string;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
             ownerId: string;
             species: import(".prisma/client").$Enums.Species;
             breed: string | null;

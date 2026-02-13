@@ -8,7 +8,8 @@
       "Bash(node update-roles.js:*)",
       "Bash(del:*)",
       "Bash(npm install:*)",
-      "WebFetch(domain:developers.deepgram.com)"
+      "WebFetch(domain:developers.deepgram.com)",
+      "Bash(npx prisma generate:*)"
     ]
   }
 }
