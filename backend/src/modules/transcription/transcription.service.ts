@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { WhisperService } from './whisper.service';
 import { AIAnalysisService } from './ai-analysis.service';
 import { AnalyzeTranscriptDto, ConsentDto } from './dto/transcription.dto';
 
@@ -8,15 +7,13 @@ import { AnalyzeTranscriptDto, ConsentDto } from './dto/transcription.dto';
 export class TranscriptionService {
     constructor(
         private prisma: PrismaService,
-        private whisperService: WhisperService,
         private aiAnalysisService: AIAnalysisService,
     ) { }
 
     /**
-     * Inicia uma nova sessão de transcrição
+     * Valida que a consulta existe e pertence ao veterinário
      */
-    async startTranscription(consultationId: string, veterinarianId: string) {
-        // Verifica se consulta existe e pertence ao vet
+    private async validateOwnership(consultationId: string, veterinarianId: string) {
         const consultation = await this.prisma.consultation.findUnique({
             where: { id: consultationId },
         });
@@ -29,9 +26,17 @@ export class TranscriptionService {
             throw new ForbiddenException('Você não tem permissão para esta consulta');
         }
 
-        // Cria registro de transcrição
+        return consultation;
+    }
+
+    /**
+     * Inicia uma nova sessão de transcrição
+     */
+    async startTranscription(consultationId: string, veterinarianId: string) {
+        await this.validateOwnership(consultationId, veterinarianId);
+
         const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 30); // 30 dias
+        expiresAt.setDate(expiresAt.getDate() + 30);
 
         const transcript = await this.prisma.consultationTranscript.create({
             data: {
@@ -49,7 +54,9 @@ export class TranscriptionService {
     /**
      * Registra consentimento LGPD
      */
-    async recordConsent(dto: ConsentDto) {
+    async recordConsent(dto: ConsentDto, veterinarianId: string) {
+        await this.validateOwnership(dto.consultationId, veterinarianId);
+
         const transcript = await this.prisma.consultationTranscript.findFirst({
             where: { consultationId: dto.consultationId },
             orderBy: { createdAt: 'desc' },
@@ -66,13 +73,9 @@ export class TranscriptionService {
     }
 
     /**
-     * Transcreve chunk de áudio
+     * Appende texto ao transcript ativo (chamado pelo Gateway em tempo real)
      */
-    async transcribeAudioChunk(audioFile: Express.Multer.File, consultationId: string) {
-        // 1. Transcrever com Whisper
-        const transcribedText = await this.whisperService.transcribeAudio(audioFile);
-
-        // 2. Buscar sessão de transcrição ativa
+    async appendTranscript(consultationId: string, text: string): Promise<string> {
         const session = await this.prisma.consultationTranscript.findFirst({
             where: { consultationId },
             orderBy: { createdAt: 'desc' },
@@ -82,36 +85,31 @@ export class TranscriptionService {
             throw new NotFoundException('Sessão de transcrição não encontrada');
         }
 
-        // 3. Append ao texto existente
         const updatedTranscript = session.transcript
-            ? `${session.transcript} ${transcribedText}`
-            : transcribedText;
+            ? `${session.transcript} ${text}`
+            : text;
 
         await this.prisma.consultationTranscript.update({
             where: { id: session.id },
             data: { transcript: updatedTranscript },
         });
 
-        return {
-            transcribedText,
-            fullTranscript: updatedTranscript,
-        };
+        return updatedTranscript;
     }
 
     /**
      * Analisa transcrição e auto-marca checklist
      */
-    async analyzeAndAutoCheck(dto: AnalyzeTranscriptDto) {
-        // 1. Analisar com IA
+    async analyzeAndAutoCheck(dto: AnalyzeTranscriptDto, veterinarianId: string) {
+        await this.validateOwnership(dto.consultationId, veterinarianId);
+
         const analysis = await this.aiAnalysisService.analyzeTranscript(
             dto.consultationId,
             dto.transcript,
         );
 
-        // 2. Auto-marcar items identificados
         const updates = await Promise.all(
             analysis.itemsToCheck.map(async (item) => {
-                // Busca o checklist item
                 const checklistItem = await this.prisma.consultationChecklist.findFirst({
                     where: {
                         consultationId: dto.consultationId,
@@ -123,7 +121,6 @@ export class TranscriptionService {
                     return null;
                 }
 
-                // Atualiza com dados da IA
                 return this.prisma.consultationChecklist.update({
                     where: { id: checklistItem.id },
                     data: {
@@ -138,7 +135,6 @@ export class TranscriptionService {
             }),
         );
 
-        // 3. Recalcular aderência
         await this.recalculateAdherence(dto.consultationId);
 
         return {
@@ -151,7 +147,9 @@ export class TranscriptionService {
     /**
      * Finaliza transcrição
      */
-    async finishTranscription(consultationId: string, duration: number) {
+    async finishTranscription(consultationId: string, duration: number, veterinarianId: string) {
+        await this.validateOwnership(consultationId, veterinarianId);
+
         const session = await this.prisma.consultationTranscript.findFirst({
             where: { consultationId },
             orderBy: { createdAt: 'desc' },
@@ -173,7 +171,9 @@ export class TranscriptionService {
     /**
      * Buscar transcrição de uma consulta
      */
-    async getTranscription(consultationId: string) {
+    async getTranscription(consultationId: string, veterinarianId: string) {
+        await this.validateOwnership(consultationId, veterinarianId);
+
         return this.prisma.consultationTranscript.findFirst({
             where: { consultationId },
             orderBy: { createdAt: 'desc' },
@@ -200,7 +200,7 @@ export class TranscriptionService {
     }
 
     /**
-     * Limpa transcrições expiradas (rodar via CRON)
+     * Limpa transcrições expiradas (chamado via CRON)
      */
     async cleanupExpiredTranscripts() {
         const deleted = await this.prisma.consultationTranscript.deleteMany({

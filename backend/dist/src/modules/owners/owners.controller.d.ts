@@ -5,8 +5,8 @@ export declare class OwnersController {
     private readonly ownersService;
     constructor(ownersService: OwnersService);
     create(dto: CreateOwnerDto): Promise<{
-        id: string;
         email: string | null;
+        id: string;
         fullName: string;
         phone: string;
         createdAt: Date;
@@ -31,8 +31,8 @@ export declare class OwnersController {
                 weight: import("@prisma/client/runtime/library").Decimal | null;
             }[];
         } & {
-            id: string;
             email: string | null;
+            id: string;
             fullName: string;
             phone: string;
             createdAt: Date;
@@ -57,8 +57,8 @@ export declare class OwnersController {
             weight: import("@prisma/client/runtime/library").Decimal | null;
         }[];
     } & {
-        id: string;
         email: string | null;
+        id: string;
         fullName: string;
         phone: string;
         createdAt: Date;
@@ -66,8 +66,8 @@ export declare class OwnersController {
         address: string | null;
     }>;
     update(id: string, dto: UpdateOwnerDto): Promise<{
-        id: string;
         email: string | null;
+        id: string;
         fullName: string;
         phone: string;
         createdAt: Date;
@@ -75,8 +75,8 @@ export declare class OwnersController {
         address: string | null;
     }>;
     remove(id: string): Promise<{
-        id: string;
         email: string | null;
+        id: string;
         fullName: string;
         phone: string;
         createdAt: Date;

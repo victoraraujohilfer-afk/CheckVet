@@ -12,15 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TranscriptionService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
-const whisper_service_1 = require("./whisper.service");
 const ai_analysis_service_1 = require("./ai-analysis.service");
 let TranscriptionService = class TranscriptionService {
-    constructor(prisma, whisperService, aiAnalysisService) {
+    constructor(prisma, aiAnalysisService) {
         this.prisma = prisma;
-        this.whisperService = whisperService;
         this.aiAnalysisService = aiAnalysisService;
     }
-    async startTranscription(consultationId, veterinarianId) {
+    async validateOwnership(consultationId, veterinarianId) {
         const consultation = await this.prisma.consultation.findUnique({
             where: { id: consultationId },
         });
@@ -30,6 +28,10 @@ let TranscriptionService = class TranscriptionService {
         if (consultation.veterinarianId !== veterinarianId) {
             throw new common_1.ForbiddenException('Você não tem permissão para esta consulta');
         }
+        return consultation;
+    }
+    async startTranscription(consultationId, veterinarianId) {
+        await this.validateOwnership(consultationId, veterinarianId);
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 30);
         const transcript = await this.prisma.consultationTranscript.create({
@@ -43,7 +45,8 @@ let TranscriptionService = class TranscriptionService {
         });
         return transcript;
     }
-    async recordConsent(dto) {
+    async recordConsent(dto, veterinarianId) {
+        await this.validateOwnership(dto.consultationId, veterinarianId);
         const transcript = await this.prisma.consultationTranscript.findFirst({
             where: { consultationId: dto.consultationId },
             orderBy: { createdAt: 'desc' },
@@ -56,8 +59,7 @@ let TranscriptionService = class TranscriptionService {
             data: { consentGiven: dto.consentGiven },
         });
     }
-    async transcribeAudioChunk(audioFile, consultationId) {
-        const transcribedText = await this.whisperService.transcribeAudio(audioFile);
+    async appendTranscript(consultationId, text) {
         const session = await this.prisma.consultationTranscript.findFirst({
             where: { consultationId },
             orderBy: { createdAt: 'desc' },
@@ -66,18 +68,16 @@ let TranscriptionService = class TranscriptionService {
             throw new common_1.NotFoundException('Sessão de transcrição não encontrada');
         }
         const updatedTranscript = session.transcript
-            ? `${session.transcript} ${transcribedText}`
-            : transcribedText;
+            ? `${session.transcript} ${text}`
+            : text;
         await this.prisma.consultationTranscript.update({
             where: { id: session.id },
             data: { transcript: updatedTranscript },
         });
-        return {
-            transcribedText,
-            fullTranscript: updatedTranscript,
-        };
+        return updatedTranscript;
     }
-    async analyzeAndAutoCheck(dto) {
+    async analyzeAndAutoCheck(dto, veterinarianId) {
+        await this.validateOwnership(dto.consultationId, veterinarianId);
         const analysis = await this.aiAnalysisService.analyzeTranscript(dto.consultationId, dto.transcript);
         const updates = await Promise.all(analysis.itemsToCheck.map(async (item) => {
             const checklistItem = await this.prisma.consultationChecklist.findFirst({
@@ -108,7 +108,8 @@ let TranscriptionService = class TranscriptionService {
             items: analysis.itemsToCheck,
         };
     }
-    async finishTranscription(consultationId, duration) {
+    async finishTranscription(consultationId, duration, veterinarianId) {
+        await this.validateOwnership(consultationId, veterinarianId);
         const session = await this.prisma.consultationTranscript.findFirst({
             where: { consultationId },
             orderBy: { createdAt: 'desc' },
@@ -124,7 +125,8 @@ let TranscriptionService = class TranscriptionService {
             },
         });
     }
-    async getTranscription(consultationId) {
+    async getTranscription(consultationId, veterinarianId) {
+        await this.validateOwnership(consultationId, veterinarianId);
         return this.prisma.consultationTranscript.findFirst({
             where: { consultationId },
             orderBy: { createdAt: 'desc' },
@@ -158,7 +160,6 @@ exports.TranscriptionService = TranscriptionService;
 exports.TranscriptionService = TranscriptionService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        whisper_service_1.WhisperService,
         ai_analysis_service_1.AIAnalysisService])
 ], TranscriptionService);
 //# sourceMappingURL=transcription.service.js.map

@@ -1,41 +1,37 @@
 import { PrismaService } from '../../prisma/prisma.service';
-import { WhisperService } from './whisper.service';
 import { AIAnalysisService } from './ai-analysis.service';
 import { AnalyzeTranscriptDto, ConsentDto } from './dto/transcription.dto';
 export declare class TranscriptionService {
     private prisma;
-    private whisperService;
     private aiAnalysisService;
-    constructor(prisma: PrismaService, whisperService: WhisperService, aiAnalysisService: AIAnalysisService);
+    constructor(prisma: PrismaService, aiAnalysisService: AIAnalysisService);
+    private validateOwnership;
     startTranscription(consultationId: string, veterinarianId: string): Promise<{
         id: string;
         createdAt: Date;
         consultationId: string;
         transcript: string;
+        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
-        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
         expiresAt: Date;
     }>;
-    recordConsent(dto: ConsentDto): Promise<{
+    recordConsent(dto: ConsentDto, veterinarianId: string): Promise<{
         id: string;
         createdAt: Date;
         consultationId: string;
         transcript: string;
+        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
-        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
         expiresAt: Date;
     }>;
-    transcribeAudioChunk(audioFile: Express.Multer.File, consultationId: string): Promise<{
-        transcribedText: string;
-        fullTranscript: string;
-    }>;
-    analyzeAndAutoCheck(dto: AnalyzeTranscriptDto): Promise<{
+    appendTranscript(consultationId: string, text: string): Promise<string>;
+    analyzeAndAutoCheck(dto: AnalyzeTranscriptDto, veterinarianId: string): Promise<{
         itemsChecked: number;
         analysis: string;
         items: {
@@ -45,26 +41,26 @@ export declare class TranscriptionService {
             transcript: string;
         }[];
     }>;
-    finishTranscription(consultationId: string, duration: number): Promise<{
+    finishTranscription(consultationId: string, duration: number, veterinarianId: string): Promise<{
         id: string;
         createdAt: Date;
         consultationId: string;
         transcript: string;
+        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
-        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
         expiresAt: Date;
     }>;
-    getTranscription(consultationId: string): Promise<{
+    getTranscription(consultationId: string, veterinarianId: string): Promise<{
         id: string;
         createdAt: Date;
         consultationId: string;
         transcript: string;
+        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
-        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
         expiresAt: Date;
