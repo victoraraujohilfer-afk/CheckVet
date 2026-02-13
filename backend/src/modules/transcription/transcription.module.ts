@@ -1,28 +1,33 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TranscriptionController } from './transcription.controller';
 import { TranscriptionService } from './transcription.service';
-import { WhisperService } from './whisper.service';
+import { DeepgramService } from './deepgram.service';
 import { AIAnalysisService } from './ai-analysis.service';
+import { TranscriptionGateway } from './transcription.gateway';
+import { TranscriptionCleanupCron } from './transcription-cleanup.cron';
 import { PrismaModule } from '../../prisma/prisma.module';
-import { MulterModule } from '@nestjs/platform-express';
-import { mkdirSync } from 'fs';
-
-// Cria diretório de uploads se não existir
-try {
-    mkdirSync('./uploads/audio', { recursive: true });
-} catch (error) {
-    // Ignora se já existe
-}
 
 @Module({
     imports: [
         PrismaModule,
-        MulterModule.register({
-            dest: './uploads/audio',
+        JwtModule.registerAsync({
+            imports: [ConfigModule],
+            useFactory: (configService: ConfigService) => ({
+                secret: configService.get<string>('JWT_SECRET'),
+            }),
+            inject: [ConfigService],
         }),
     ],
     controllers: [TranscriptionController],
-    providers: [TranscriptionService, WhisperService, AIAnalysisService],
+    providers: [
+        TranscriptionService,
+        DeepgramService,
+        AIAnalysisService,
+        TranscriptionGateway,
+        TranscriptionCleanupCron,
+    ],
     exports: [TranscriptionService],
 })
 export class TranscriptionModule { }

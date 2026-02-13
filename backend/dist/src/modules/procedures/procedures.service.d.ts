@@ -8,23 +8,23 @@ export declare class ProceduresService {
         createdAt: Date;
         name: string;
         consultationId: string;
-        code: string | null;
         value: import("@prisma/client/runtime/library").Decimal | null;
+        code: string | null;
     }>;
     findByConsultation(consultationId: string): Promise<{
         id: string;
         createdAt: Date;
         name: string;
         consultationId: string;
-        code: string | null;
         value: import("@prisma/client/runtime/library").Decimal | null;
+        code: string | null;
     }[]>;
     remove(id: string): Promise<{
         id: string;
         createdAt: Date;
         name: string;
         consultationId: string;
-        code: string | null;
         value: import("@prisma/client/runtime/library").Decimal | null;
+        code: string | null;
     }>;
 }

@@ -9,11 +9,6 @@ export interface TranscriptionSession {
     finishedAt?: string;
 }
 
-export interface TranscriptionResult {
-    transcribedText: string;
-    fullTranscript: string;
-}
-
 export interface AnalysisResult {
     itemsChecked: number;
     analysis: string;
@@ -37,19 +32,6 @@ export const transcriptionService = {
         api
             .post('/transcription/consent', { consultationId, consentGiven })
             .then((r) => r.data),
-
-    // Upload de chunk de áudio
-    uploadAudio: (consultationId: string, audioBlob: Blob) => {
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'audio.webm');
-        formData.append('consultationId', consultationId);
-
-        return api
-            .post<{ data: TranscriptionResult }>('/transcription/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            })
-            .then((r) => r.data.data);
-    },
 
     // Analisar transcrição e auto-marcar checklist
     analyzeTranscript: (consultationId: string, transcript: string) =>

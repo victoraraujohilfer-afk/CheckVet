@@ -14,14 +14,11 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TranscriptionController = void 0;
 const common_1 = require("@nestjs/common");
-const platform_express_1 = require("@nestjs/platform-express");
 const swagger_1 = require("@nestjs/swagger");
 const transcription_service_1 = require("./transcription.service");
 const transcription_dto_1 = require("./dto/transcription.dto");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
-const multer_1 = require("multer");
-const path_1 = require("path");
 let TranscriptionController = class TranscriptionController {
     constructor(transcriptionService) {
         this.transcriptionService = transcriptionService;
@@ -29,20 +26,17 @@ let TranscriptionController = class TranscriptionController {
     async startTranscription(dto, userId) {
         return this.transcriptionService.startTranscription(dto.consultationId, userId);
     }
-    async recordConsent(dto) {
-        return this.transcriptionService.recordConsent(dto);
+    async recordConsent(dto, userId) {
+        return this.transcriptionService.recordConsent(dto, userId);
     }
-    async uploadAudio(file, consultationId) {
-        return this.transcriptionService.transcribeAudioChunk(file, consultationId);
+    async analyzeTranscript(dto, userId) {
+        return this.transcriptionService.analyzeAndAutoCheck(dto, userId);
     }
-    async analyzeTranscript(dto) {
-        return this.transcriptionService.analyzeAndAutoCheck(dto);
+    async finishTranscription(consultationId, duration, userId) {
+        return this.transcriptionService.finishTranscription(consultationId, duration, userId);
     }
-    async finishTranscription(consultationId, duration) {
-        return this.transcriptionService.finishTranscription(consultationId, duration);
-    }
-    async getTranscription(consultationId) {
-        return this.transcriptionService.getTranscription(consultationId);
+    async getTranscription(consultationId, userId) {
+        return this.transcriptionService.getTranscription(consultationId, userId);
     }
 };
 exports.TranscriptionController = TranscriptionController;
@@ -59,38 +53,18 @@ __decorate([
     (0, common_1.Post)('consent'),
     (0, swagger_1.ApiOperation)({ summary: 'Registrar consentimento LGPD' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [transcription_dto_1.ConsentDto]),
+    __metadata("design:paramtypes", [transcription_dto_1.ConsentDto, String]),
     __metadata("design:returntype", Promise)
 ], TranscriptionController.prototype, "recordConsent", null);
-__decorate([
-    (0, common_1.Post)('upload'),
-    (0, swagger_1.ApiOperation)({ summary: 'Upload de chunk de áudio para transcrição' }),
-    (0, swagger_1.ApiConsumes)('multipart/form-data'),
-    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('audio', {
-        storage: (0, multer_1.diskStorage)({
-            destination: './uploads/audio',
-            filename: (req, file, callback) => {
-                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-                callback(null, `audio-${uniqueSuffix}${(0, path_1.extname)(file.originalname)}`);
-            },
-        }),
-        limits: {
-            fileSize: 25 * 1024 * 1024,
-        },
-    })),
-    __param(0, (0, common_1.UploadedFile)()),
-    __param(1, (0, common_1.Body)('consultationId')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", Promise)
-], TranscriptionController.prototype, "uploadAudio", null);
 __decorate([
     (0, common_1.Post)('analyze'),
     (0, swagger_1.ApiOperation)({ summary: 'Analisar transcrição e auto-marcar checklist' }),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [transcription_dto_1.AnalyzeTranscriptDto]),
+    __metadata("design:paramtypes", [transcription_dto_1.AnalyzeTranscriptDto, String]),
     __metadata("design:returntype", Promise)
 ], TranscriptionController.prototype, "analyzeTranscript", null);
 __decorate([
@@ -98,16 +72,18 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Finalizar transcrição' }),
     __param(0, (0, common_1.Param)('consultationId')),
     __param(1, (0, common_1.Body)('duration')),
+    __param(2, (0, current_user_decorator_1.CurrentUser)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Number]),
+    __metadata("design:paramtypes", [String, Number, String]),
     __metadata("design:returntype", Promise)
 ], TranscriptionController.prototype, "finishTranscription", null);
 __decorate([
     (0, common_1.Get)(':consultationId'),
     (0, swagger_1.ApiOperation)({ summary: 'Obter transcrição de uma consulta' }),
     __param(0, (0, common_1.Param)('consultationId')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], TranscriptionController.prototype, "getTranscription", null);
 exports.TranscriptionController = TranscriptionController = __decorate([

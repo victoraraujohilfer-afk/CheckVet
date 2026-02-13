@@ -25,7 +25,7 @@ const TranscriptionRecorder = ({
         state,
         transcript,
         duration,
-        startRecording,
+        requestConsent,
         confirmConsent,
         pauseRecording,
         resumeRecording,
@@ -44,9 +44,9 @@ const TranscriptionRecorder = ({
         },
     });
 
-    const handleStart = async () => {
+    const handleStart = () => {
         setShowConsentModal(true);
-        await startRecording();
+        requestConsent();
     };
 
     const handleConsent = async (consent: boolean) => {

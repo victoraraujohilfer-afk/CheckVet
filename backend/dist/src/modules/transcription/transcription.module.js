@@ -8,18 +8,15 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TranscriptionModule = void 0;
 const common_1 = require("@nestjs/common");
+const jwt_1 = require("@nestjs/jwt");
+const config_1 = require("@nestjs/config");
 const transcription_controller_1 = require("./transcription.controller");
 const transcription_service_1 = require("./transcription.service");
-const whisper_service_1 = require("./whisper.service");
+const deepgram_service_1 = require("./deepgram.service");
 const ai_analysis_service_1 = require("./ai-analysis.service");
+const transcription_gateway_1 = require("./transcription.gateway");
+const transcription_cleanup_cron_1 = require("./transcription-cleanup.cron");
 const prisma_module_1 = require("../../prisma/prisma.module");
-const platform_express_1 = require("@nestjs/platform-express");
-const fs_1 = require("fs");
-try {
-    (0, fs_1.mkdirSync)('./uploads/audio', { recursive: true });
-}
-catch (error) {
-}
 let TranscriptionModule = class TranscriptionModule {
 };
 exports.TranscriptionModule = TranscriptionModule;
@@ -27,12 +24,22 @@ exports.TranscriptionModule = TranscriptionModule = __decorate([
     (0, common_1.Module)({
         imports: [
             prisma_module_1.PrismaModule,
-            platform_express_1.MulterModule.register({
-                dest: './uploads/audio',
+            jwt_1.JwtModule.registerAsync({
+                imports: [config_1.ConfigModule],
+                useFactory: (configService) => ({
+                    secret: configService.get('JWT_SECRET'),
+                }),
+                inject: [config_1.ConfigService],
             }),
         ],
         controllers: [transcription_controller_1.TranscriptionController],
-        providers: [transcription_service_1.TranscriptionService, whisper_service_1.WhisperService, ai_analysis_service_1.AIAnalysisService],
+        providers: [
+            transcription_service_1.TranscriptionService,
+            deepgram_service_1.DeepgramService,
+            ai_analysis_service_1.AIAnalysisService,
+            transcription_gateway_1.TranscriptionGateway,
+            transcription_cleanup_cron_1.TranscriptionCleanupCron,
+        ],
         exports: [transcription_service_1.TranscriptionService],
     })
 ], TranscriptionModule);

@@ -6,7 +6,9 @@
       "Bash(npx prisma migrate dev:*)",
       "Bash(npx prisma db push:*)",
       "Bash(node update-roles.js:*)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:developers.deepgram.com)"
     ]
   }
 }

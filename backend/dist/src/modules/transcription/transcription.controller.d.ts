@@ -8,30 +8,26 @@ export declare class TranscriptionController {
         createdAt: Date;
         consultationId: string;
         transcript: string;
+        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
-        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
         expiresAt: Date;
     }>;
-    recordConsent(dto: ConsentDto): Promise<{
+    recordConsent(dto: ConsentDto, userId: string): Promise<{
         id: string;
         createdAt: Date;
         consultationId: string;
         transcript: string;
+        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
-        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
         expiresAt: Date;
     }>;
-    uploadAudio(file: Express.Multer.File, consultationId: string): Promise<{
-        transcribedText: string;
-        fullTranscript: string;
-    }>;
-    analyzeTranscript(dto: AnalyzeTranscriptDto): Promise<{
+    analyzeTranscript(dto: AnalyzeTranscriptDto, userId: string): Promise<{
         itemsChecked: number;
         analysis: string;
         items: {
@@ -41,26 +37,26 @@ export declare class TranscriptionController {
             transcript: string;
         }[];
     }>;
-    finishTranscription(consultationId: string, duration: number): Promise<{
+    finishTranscription(consultationId: string, duration: number, userId: string): Promise<{
         id: string;
         createdAt: Date;
         consultationId: string;
         transcript: string;
+        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
-        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
         expiresAt: Date;
     }>;
-    getTranscription(consultationId: string): Promise<{
+    getTranscription(consultationId: string, userId: string): Promise<{
         id: string;
         createdAt: Date;
         consultationId: string;
         transcript: string;
+        consentGiven: boolean;
         audioUrl: string | null;
         duration: number | null;
-        consentGiven: boolean;
         startedAt: Date;
         finishedAt: Date | null;
         expiresAt: Date;
